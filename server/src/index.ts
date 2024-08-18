@@ -1,20 +1,9 @@
-import express from 'express';
+import express, { RequestHandler } from 'express';
 
-const app = express()
+const app = express();
 
-// listening the home route
-app.get('/', (req, res) => {
-    res.json({ message: 'This message is coming from the server' });
-});
-
-app.post('/', (req, res) => {
-    req.on('data', (chunk) => {
-        console.log(JSON.parse(chunk));
-        console.log(req.body);
-        res.json({ message: 'This message is coming from the post request' })
-    });
-});
-
+app.use(express.json());
+app.use(express.urlencoded({ extended: false })); // This is for forms only
 
 app.listen(8000, () => {
     console.log('The app is running on site http://localhost:8000');
