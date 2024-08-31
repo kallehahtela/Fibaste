@@ -6,6 +6,7 @@ import AuthVerificationTokenModel from "src/models/authVerificationToken";
 import { sendErrorRes } from "src/utils/helper";
 
 export const createNewUser: RequestHandler = async (req, res) => {
+
     // Read incoming data like: name, email, password
     const { name, email, password } = req.body;
 
@@ -50,4 +51,4 @@ export const createNewUser: RequestHandler = async (req, res) => {
 
     // Send message back to check email
     res.json({ message: 'Please check your inbox.' });
-}
+};
