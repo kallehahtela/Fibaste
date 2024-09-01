@@ -4,6 +4,8 @@ import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import AuthVerificationTokenModel from "src/models/authVerificationToken";
 import { sendErrorRes } from "src/utils/helper";
+import jwt from 'jsonwebtoken';
+import { profile } from "console";
 
 export const createNewUser: RequestHandler = async (req, res) => {
 
@@ -30,7 +32,7 @@ export const createNewUser: RequestHandler = async (req, res) => {
     await AuthVerificationTokenModel.create({ owner: user._id, token });
 
     // Send verification link with token to register email
-    const link = `http://localhost:8000/verify?id=${user._id}&token=${token}`;
+    const link = `http://localhost:8000/verify.html?id=${user._id}&token=${token}`;
 
     const transport = nodemailer.createTransport({
         host: "sandbox.smtp.mailtrap.io",
@@ -51,4 +53,78 @@ export const createNewUser: RequestHandler = async (req, res) => {
 
     // Send message back to check email
     res.json({ message: 'Please check your inbox.' });
+};
+
+export const verifyEmail: RequestHandler = async (req, res) => {
+    // Read incoming data like: id and token
+    const { id, token } = req.body;
+
+    // Find the token inside DB (using owner id).
+    const authToken = await AuthVerificationTokenModel.findOne({ owner: id });
+
+    // Send error if token not found.
+    if (!authToken) return sendErrorRes(res, 'Unauthorized request', 403);
+
+    // Check if the token is valid or not (because we have the encrypted value).
+    const isMatched = await authToken.compareToken(token);
+
+    // If not valid send error otherwise update user is verified.
+    if (!isMatched) return sendErrorRes(res, 'Unauthorized request, invalid token', 403);
+    await UserModel.findByIdAndUpdate(id, { verified: true });
+
+    // Remove token from database.
+    await AuthVerificationTokenModel.findByIdAndDelete(authToken._id);
+
+    // Send success message.
+    res.json({ message: 'Thanks for joining Fibaste, your email is now verified.' });
+};
+
+export const signIn: RequestHandler = async (req, res) => {
+    // Read incoming data like: email and password
+    const { email, password } = req.body;
+
+    // Find user with the provided email.
+    const user = await UserModel.findOne({ email });
+
+    // Send error if user not found.
+    if (!user) return sendErrorRes(res, 'Email or Password is incorrect!', 403);
+
+    // Check if the password is valid or not (because password is in encrypted form).
+    const isMatched = await user.comparePassword(password);
+
+    // If not valid send error otherwise generate access & refresh token.
+    if (!isMatched) return sendErrorRes(res, 'Email or Password is incorrect!', 403);
+
+    const payload = { id: user._id };
+    const accessToken = jwt.sign(payload, 'secret', {
+        expiresIn: '15m'
+    });
+    const refreshToken = jwt.sign(payload, 'secret')
+
+    // Store refresh token inside DB.
+    if (!user.tokens) user.tokens = [refreshToken];
+    else user.tokens.push(refreshToken);
+
+    await user.save();
+
+    // Send both tokens to user.
+    res.json({
+        profile: {
+            id: user._id,
+            email: user.email,
+            name: user.name,
+            verified: user.verified,
+        },
+        tokens: { refresh: refreshToken, access: accessToken }
+    });
+};
+
+export const sendProfile: RequestHandler = async (req, res) => {
+    /*
+
+    */
+
+    res.json({
+        profile: req.user,
+    })
 };
