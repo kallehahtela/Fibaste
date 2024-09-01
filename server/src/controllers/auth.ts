@@ -6,6 +6,7 @@ import AuthVerificationTokenModel from "src/models/authVerificationToken";
 import { sendErrorRes } from "src/utils/helper";
 import jwt from 'jsonwebtoken';
 import { profile } from "console";
+import mail from "src/utils/mail";
 
 export const createNewUser: RequestHandler = async (req, res) => {
 
@@ -34,22 +35,7 @@ export const createNewUser: RequestHandler = async (req, res) => {
     // Send verification link with token to register email
     const link = `http://localhost:8000/verify.html?id=${user._id}&token=${token}`;
 
-    const transport = nodemailer.createTransport({
-        host: "sandbox.smtp.mailtrap.io",
-        port: 2525,
-        auth: {
-            user: "a6ce5899c54285",
-            pass: "b9c1a1efeff7b4"
-        }
-    });
-
-    // this is just for testing
-    // need to change to Email Sending later rather than Email Testing
-    await transport.sendMail({
-        from: 'verification@fibaste.com',
-        to: user.email, // khahtela@gmail.com
-        html: `<h1>Please click on <a href='${link}'>this link</a> to verify your email.</h1>`,
-    });
+    await mail.sendVerification(user.email, link)
 
     // Send message back to check email
     res.json({ message: 'Please check your inbox.' });
@@ -77,6 +63,25 @@ export const verifyEmail: RequestHandler = async (req, res) => {
 
     // Send success message.
     res.json({ message: 'Thanks for joining Fibaste, your email is now verified.' });
+};
+
+export const generateVerificationLink: RequestHandler = async (req, res) => {
+    // Check if user is authenticated or not.
+    const { id } = req.user;
+    const token = crypto.randomBytes(36).toString('hex');
+
+    // Remove previous token if any.
+    await AuthVerificationTokenModel.findOneAndDelete({ owner: id });
+
+    // Create/store new token.
+    await AuthVerificationTokenModel.create({ owner: id, token });
+
+    // Send link inside users email.
+    const link = `http://localhost:8000/verify.html?id=${id}&token=${token}`;
+    await mail.sendVerification(req.user.email, link)
+
+    // Send response back.
+    res.json({ message: 'Please check your inbox' });
 };
 
 export const signIn: RequestHandler = async (req, res) => {
@@ -120,11 +125,7 @@ export const signIn: RequestHandler = async (req, res) => {
 };
 
 export const sendProfile: RequestHandler = async (req, res) => {
-    /*
-
-    */
-
     res.json({
         profile: req.user,
-    })
+    });
 };

@@ -55,3 +55,16 @@ authRouter.post('/reset-pass');
 8. Attach user profile inside req object.
 9. Call `next` function.
 10. Handle error for expired tokens.
+
+- `/verify-token`
+1. Check if user is authenticated or not
+2. Remove previous token if any
+3. Create/store new token and send response back
+   
+- `/refresh-token`
+1. Read and verify refresh token.
+2. Find user with payload.id and refresh token.
+3. If the refresh token is valid and no user found, token is compromised.
+4. Remove all the previous tokens and send error response.
+5. If the token is valid and user found create new refresh and access token.
+6. Remove previous token, update user and send new tokens.
