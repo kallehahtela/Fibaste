@@ -68,3 +68,6 @@ authRouter.post('/reset-pass');
 4. Remove all the previous tokens and send error response.
 5. If the token is valid and user found create new refresh and access token.
 6. Remove previous token, update user and send new tokens.
+
+- `/sign-out`
+1. Remove the refresh token

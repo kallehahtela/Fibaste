@@ -5,8 +5,10 @@ import nodemailer from 'nodemailer';
 import AuthVerificationTokenModel from "src/models/authVerificationToken";
 import { sendErrorRes } from "src/utils/helper";
 import jwt from 'jsonwebtoken';
-import { profile } from "console";
 import mail from "src/utils/mail";
+
+const VERIFICATION_LINK = process.env.VERIFICATION_LINK;
+const JWT_SECRET = process.env.JWT_SECRET!;
 
 export const createNewUser: RequestHandler = async (req, res) => {
 
@@ -33,7 +35,7 @@ export const createNewUser: RequestHandler = async (req, res) => {
     await AuthVerificationTokenModel.create({ owner: user._id, token });
 
     // Send verification link with token to register email
-    const link = `http://localhost:8000/verify.html?id=${user._id}&token=${token}`;
+    const link = `${VERIFICATION_LINK}?id=${user._id}&token=${token}`;
 
     await mail.sendVerification(user.email, link)
 
@@ -77,7 +79,7 @@ export const generateVerificationLink: RequestHandler = async (req, res) => {
     await AuthVerificationTokenModel.create({ owner: id, token });
 
     // Send link inside users email.
-    const link = `http://localhost:8000/verify.html?id=${id}&token=${token}`;
+    const link = `${VERIFICATION_LINK}?id=${id}&token=${token}`;
     await mail.sendVerification(req.user.email, link)
 
     // Send response back.
@@ -101,10 +103,10 @@ export const signIn: RequestHandler = async (req, res) => {
     if (!isMatched) return sendErrorRes(res, 'Email or Password is incorrect!', 403);
 
     const payload = { id: user._id };
-    const accessToken = jwt.sign(payload, 'secret', {
+    const accessToken = jwt.sign(payload, 'JWT_SECRET', {
         expiresIn: '15m'
     });
-    const refreshToken = jwt.sign(payload, 'secret')
+    const refreshToken = jwt.sign(payload, 'JWT_SECRET');
 
     // Store refresh token inside DB.
     if (!user.tokens) user.tokens = [refreshToken];
@@ -128,4 +130,59 @@ export const sendProfile: RequestHandler = async (req, res) => {
     res.json({
         profile: req.user,
     });
+};
+
+export const grantAccessToken: RequestHandler = async (req, res) => {
+    // Read and verify refresh token.
+    const { refreshToken } = req.body;
+    if (!refreshToken) return sendErrorRes(res, 'Unauthorized request!', 403);
+
+    // Find user with payload.id and refresh token.
+    const payload = jwt.verify(refreshToken, 'JWT_SECRET') as { id: string };
+    if (!payload.id) return sendErrorRes(res, 'Unauthorized request!', 401);
+
+    const user = await UserModel.findOne({
+        _id: payload.id,
+        tokens: refreshToken,
+    });
+
+    // If the refresh token is valid and no user found, token is compromised.
+    if (!user) {
+        // user is compromised, remove all the previous tokens
+        await UserModel.findByIdAndUpdate(payload.id, { tokens: [] });
+        // Send error response.
+        return sendErrorRes(res, 'Unauthorized request!', 401);
+
+    }
+
+    // If the token is valid and user found create new refresh and access token.
+    const newAccessToken = jwt.sign({ id: user._id }, 'JWT_SECRET', {
+        expiresIn: '15m'
+    });
+    const newRefreshToken = jwt.sign({ id: user._id }, 'JWT_SECRET');
+
+    // Remove previous token, update user and send new tokens.
+    user.tokens = user.tokens.filter((t) => t !== refreshToken);
+    user.tokens.push(newRefreshToken);
+    await user.save();
+
+    res.json({
+        tokens: { refresh: newRefreshToken, access: newAccessToken },
+    });
+};
+
+export const signOut: RequestHandler = async (req, res) => {
+    // Remove the refresh token
+    const { refreshToken } = req.body;
+    const user = await UserModel.findOne({
+        _id: req.user.id,
+        tokens: refreshToken,
+    });
+    if (!user) return sendErrorRes(res, 'Unauthorized request, user not found!', 403);
+
+    const newTokens = user.tokens.filter((t) => t !== refreshToken);
+    user.tokens = newTokens;
+    await user.save();
+
+    res.send();
 };
