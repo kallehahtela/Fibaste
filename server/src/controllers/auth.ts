@@ -9,7 +9,7 @@ import mail from "src/utils/mail";
 import PasswordResetTokenModel from "src/models/passwordResetToken";
 
 const VERIFICATION_LINK = process.env.VERIFICATION_LINK;
-const JWT_SECRET = process.env.JWT_SECRET!;
+const JWT_SECRET = process.env.JWT_SECRET!
 const PASSWORD_RESET_LINK = process.env.PASSWORD_RESET_LINK;
 
 export const createNewUser: RequestHandler = async (req, res) => {
@@ -105,10 +105,10 @@ export const signIn: RequestHandler = async (req, res) => {
     if (!isMatched) return sendErrorRes(res, 'Email or Password is incorrect!', 403);
 
     const payload = { id: user._id };
-    const accessToken = jwt.sign(payload, 'JWT_SECRET', {
+    const accessToken = jwt.sign(payload, JWT_SECRET, {
         expiresIn: '15m'
     });
-    const refreshToken = jwt.sign(payload, 'JWT_SECRET');
+    const refreshToken = jwt.sign(payload, JWT_SECRET);
 
     // Store refresh token inside DB.
     if (!user.tokens) user.tokens = [refreshToken];
@@ -140,7 +140,7 @@ export const grantAccessToken: RequestHandler = async (req, res) => {
     if (!refreshToken) return sendErrorRes(res, 'Unauthorized request!', 403);
 
     // Find user with payload.id and refresh token.
-    const payload = jwt.verify(refreshToken, 'JWT_SECRET') as { id: string };
+    const payload = jwt.verify(refreshToken, JWT_SECRET) as { id: string };
     if (!payload.id) return sendErrorRes(res, 'Unauthorized request!', 401);
 
     const user = await UserModel.findOne({
@@ -158,10 +158,10 @@ export const grantAccessToken: RequestHandler = async (req, res) => {
     }
 
     // If the token is valid and user found create new refresh and access token.
-    const newAccessToken = jwt.sign({ id: user._id }, 'JWT_SECRET', {
+    const newAccessToken = jwt.sign({ id: user._id }, JWT_SECRET, {
         expiresIn: '15m'
     });
-    const newRefreshToken = jwt.sign({ id: user._id }, 'JWT_SECRET');
+    const newRefreshToken = jwt.sign({ id: user._id }, JWT_SECRET);
 
     // Remove previous token, update user and send new tokens.
     user.tokens = user.tokens.filter((t) => t !== refreshToken);
@@ -218,4 +218,49 @@ export const generateForgetPassLink: RequestHandler = async (req, res) => {
 
 export const grantValid: RequestHandler = async (req, res) => {
     res.json({ valid: true });
+};
+
+export const updatePassword: RequestHandler = async (req, res) => {
+    // Read user id, reset pass token and password.
+    // Validate all these things.
+
+    // If valid find user with the given id.
+    const { id, password } = req.body;
+
+    const user = await UserModel.findById(id);
+    if (!user) return sendErrorRes(res, 'Unauthorized access!', 403);
+
+    // Check if user is using same password.
+    const matched = await user.comparePassword(password);
+
+    // If there is no user or user is using the same password send error res.
+    if (matched) return sendErrorRes(res, 'The new password should be different!', 422);
+
+    // Else update new password.
+    user.password = password;
+    await user.save();
+
+    // Remove password reset token.
+    await PasswordResetTokenModel.findOneAndDelete({ owner: user._id });
+
+    // Send confirmation email.
+    await mail.sendPasswordUpdateMessage(user.email);
+
+    // Send response back.
+    res.json({ message: 'Password reset successfully.' });
+};
+
+export const updateProfile: RequestHandler = async (req, res) => {
+    // User must be logged in (authenticated).
+    // Name must be valid.
+    const { name } = req.body;
+    if (typeof name !== 'string' || name.trim().length < 3) {
+        return sendErrorRes(res, 'Invalid name!', 422);
+    }
+
+    // Find user and update the name.
+    await UserModel.findByIdAndUpdate(req.user.id, { name });
+
+    // Send new profile back.
+    res.json({ profile: { ...req.user, name } });
 };

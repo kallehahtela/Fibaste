@@ -88,3 +88,20 @@ authRouter.post('/reset-pass');
 4. Else compare token with encrypted value.
 5. If not matched send error.
 6. Else call next function.
+
+- `/reset-pass`
+1. Read user id, reset pass token and password.
+2. Validate all these things.
+3. If valid find user with the given id.
+4. Check if user is using same password.
+5. If there is no user or user is using the same password send error res.
+6. Else update new password.
+7. Remove password reset token.
+8. Send confirmation email.
+9. Send response back.
+
+- `/update-profile`
+1. User must be logged in (authenticated).
+2. Name must be valid.
+3. Find user and update the name.
+4. Send new profile back.

@@ -29,9 +29,20 @@ const sendPasswordResetLink = async (email: string, link: string) => {
     });
 }
 
+const sendPasswordUpdateMessage = async (email: string) => {
+    // this is just for testing
+    // need to change to Email Sending later rather than Email Testing
+    await transport.sendMail({
+        from: 'security@fibaste.com',
+        to: email, // khahtela@gmail.com
+        html: `<h1>Your password is now updated, you can now use your new password.</h1>`,
+    });
+}
+
 const mail = {
     sendVerification,
     sendPasswordResetLink,
+    sendPasswordUpdateMessage,
 };
 
 export default mail;
