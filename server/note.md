@@ -71,3 +71,20 @@ authRouter.post('/reset-pass');
 
 - `/sign-out`
 1. Remove the refresh token
+
+- `/forget-pass`
+1. Ask for users email.
+2. Find the given email.
+3. Send error if there is no user.
+4. Else generate password reset token (first remove if there is any).
+5. Generate reset link (like we did for verification).
+6. Send link inside user's email.
+7. Send response back.
+
+- `/verify-pass-reset-token`
+1. Read token and id.
+2. Find token inside database with owner id.
+3. If there is no token send error.
+4. Else compare token with encrypted value.
+5. If not matched send error.
+6. Else call next function.

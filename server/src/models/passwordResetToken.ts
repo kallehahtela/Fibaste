@@ -1,7 +1,7 @@
 import { compare, genSalt, hash } from "bcrypt";
 import { model, Schema } from "mongoose";
 
-interface AuthVerificationTokenDocument extends Document {
+interface PassResetTokenDocument extends Document {
     owner: Schema.Types.ObjectId;
     token: string;
     createdAt: Date;
@@ -11,7 +11,7 @@ interface Methods {
     compareToken(token: string): Promise<boolean>
 };
 
-const schema = new Schema<AuthVerificationTokenDocument, {}, Methods>({
+const schema = new Schema<PassResetTokenDocument, {}, Methods>({
     owner: {
         type: Schema.Types.ObjectId,
         ref: 'User',
@@ -23,7 +23,7 @@ const schema = new Schema<AuthVerificationTokenDocument, {}, Methods>({
     },
     createdAt: {
         type: Date,
-        expires: 84600, // 60 * 60 * 24 = 24h
+        expires: 3600, // 60 * 60 = 1h
         default: Date.now(),
     },
 });
@@ -41,5 +41,5 @@ schema.methods.compareToken = async function (token) {
     return await compare(token, this.token);
 };
 
-const AuthVerificationTokenModel = model('AuthVerificationToken', schema);
-export default AuthVerificationTokenModel;
+const PasswordResetTokenModel = model('PasswordResetToken', schema);
+export default PasswordResetTokenModel;
