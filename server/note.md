@@ -105,3 +105,12 @@ authRouter.post('/reset-pass');
 2. Name must be valid.
 3. Find user and update the name.
 4. Send new profile back.
+
+- `/update-avatar`
+1. User must be logged in.
+2. Read incoming file.
+3. File type must be image.
+4. Check if user already have avatar or not.
+5. If yes remove the old avatar.
+6. Upload new avatar and update user.
+7. Send response back.

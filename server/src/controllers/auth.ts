@@ -264,3 +264,10 @@ export const updateProfile: RequestHandler = async (req, res) => {
     // Send new profile back.
     res.json({ profile: { ...req.user, name } });
 };
+
+export const updateAvatar: RequestHandler = async (req, res) => {
+    console.log(req.body);
+    console.log(req.files);
+
+    res.json({});
+};
