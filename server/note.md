@@ -114,3 +114,49 @@ authRouter.post('/reset-pass');
 5. If yes remove the old avatar.
 6. Upload new avatar and update user.
 7. Send response back.
+
+## Product
+The interface for products.
+
+```
+type productImage = { url: string; id: string };
+
+export interface ProductDocument extends Document {
+    owner: Schema.Types.ObjectId;
+    name: string;
+    price: number;
+    publishingDate: date;
+    category: string;
+    images: productImage[];
+    thumbnail: string;
+    description: string;
+}
+```
+
+## Product Router
+```
+productRouter.post('/create-task');
+productRouter.patch('/:id');
+productRouter.delete('/:id');
+productRouter.delete('/image/:productId/:imageId');
+productRouter.get('/:id');
+productRouter.get('/by-category/:category');
+productRouter.get('/latest');
+productRouter.get('/listings');
+```
+
+- `/create-task`
+1. User must be authenticated.
+2. User can upload images as well.
+3. Validate incoming data.
+4. Validate and Uplaod File (or Files) - note (restrict image qty).
+5. Create Product.
+6. And send the response back.
+
+- `/:id` (patch to update)
+1. User must be authenticated.
+2. User can upload images as well.
+3. Validate incoming data.
+4. Update normal propreties.
+5. Upload and update images (restrict image qty).
+6. And send response back.
