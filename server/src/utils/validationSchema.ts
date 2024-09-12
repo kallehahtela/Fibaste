@@ -59,5 +59,5 @@ export const newProductSchema = yup.object({
             return +value;
         })
         .required('Price is missing!'),
-    publishingDate: yup.date().required('Publishing date is missing!'),
+    //publishingDate: yup.date().required('Publishing date is missing!'),
 });
