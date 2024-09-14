@@ -157,6 +157,6 @@ productRouter.get('/listings');
 1. User must be authenticated.
 2. User can upload images as well.
 3. Validate incoming data.
-4. Update normal propreties.
+4. Update normal propreties (if the task is made by same user).
 5. Upload and update images (restrict image qty).
 6. And send response back.
