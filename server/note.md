@@ -139,7 +139,7 @@ productRouter.post('/create-task');
 productRouter.patch('/:id');
 productRouter.delete('/:id');
 productRouter.delete('/image/:productId/:imageId');
-productRouter.get('/:id');
+productRouter.get('/detail/:id');
 productRouter.get('/by-category/:category');
 productRouter.get('/latest');
 productRouter.get('/listings');
@@ -175,7 +175,7 @@ productRouter.get('/listings');
 4. Remove from cloud as well.
 5. And send response back.
 
-- `/:id` (get task details)
+- `/detail/:id` (get task details)
 1. User must be authenticated (optional).
 2. Validate the task id.
 3. Find Task by the id.
@@ -188,3 +188,15 @@ productRouter.get('/listings');
 3. Find tasks by category (apply pagination if needed).
 4. Format data.
 5. And send response back.
+
+- `/latest` (multiple tasks sorted with created date)
+1. User must be authenticated (optional).
+2. Find all the tasks with sorted date (apply limit/pagination if needed).
+3. Format data.
+4. And send the response back.
+
+- `/listings` (tasks created by the same user)
+1. User must be authenticated.
+2. Find all the products created by this user (apply pagination if needed).
+3. Format data.
+4. And send response back.

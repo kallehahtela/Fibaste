@@ -4,6 +4,7 @@ import { isValidObjectId } from "mongoose";
 import cloudUploader, { cloudApi } from "src/cloud";
 import ProductModel from "src/models/product";
 import { UserDocument } from "src/models/user";
+import categories from "src/utils/categories";
 import { sendErrorRes } from "src/utils/helper";
 
 const uploadImage = (filePath: string): Promise<UploadApiResponse> => {
@@ -279,11 +280,89 @@ export const getTaskDetail: RequestHandler = async (req, res) => {
 };
 
 export const getTasksByCategory: RequestHandler = async (req, res) => {
+    // Validate the category.
+    const { category } = req.params;
+    const { pageNo = '1', limit = '10' } = req.query as { pageNo: string, limit: string };
+    if (!categories.includes(category)) {
+        return sendErrorRes(res, 'Invalid category', 422);
+    }
+
+    // Find tasks by category (apply pagination if needed).
+    const tasks = await ProductModel.find({ category })
+        .sort('-createdAt')
+        .skip((+pageNo - 1) * +limit)
+        .limit(+limit);
+
+    // Format data.
+    const listings = tasks.map(t => {
+        return {
+            id: t._id,
+            name: t.name,
+            thumbnail: t.thumbnail,
+            category: t.category,
+            price: t.price,
+        }
+    });
+
+    //And send response back.
+    res.json({ tasks: listings });
+};
+
+export const getLatest: RequestHandler = async (req, res) => {
+    // Find all the tasks with sorted date (apply limit/pagination if needed).
+    const tasks = await ProductModel.find().sort('-createdAt').limit(10);
+
+    // Format data.
+    const listings = tasks.map((t) => {
+        return {
+            id: t._id,
+            name: t.name,
+            thumbnail: t.thumbnail,
+            category: t.category,
+            price: t.price,
+        };
+    });
+
+    // And send the response back.
+    res.json({ tasks: listings });
+};
+
+export const getListings: RequestHandler = async (req, res) => {
     /*
-1. User must be authenticated (optional).
-2. Validate the category.
-3. Find tasks by category (apply pagination if needed).
-4. Format data.
-5. And send response back.
+    1. User must be authenticated.
+    2. Find all the products created by this user (apply pagination if needed).
+    3. Format data.
+    4. And send response back.
     */
+    const { pageNo = '1', limit = '10' } = req.query as {
+        pageNo: string;
+        limit: string;
+    };
+
+    const tasks = await ProductModel.find({ owner: req.user.id })
+        .sort('-createdAt')
+        .skip((+pageNo - 1) * +limit)
+        .limit(+limit);
+
+    // Format data.
+    const listings = tasks.map((t) => {
+        return {
+            id: t._id,
+            name: t.name,
+            thumbnail: t.thumbnail,
+            category: t.category,
+            price: t.price,
+            images: t.images?.map(i => i.url),
+            date: t.publishingDate,
+            description: t.description,
+            seller: {
+                id: req.user.id,
+                name: req.user.name,
+                avatar: req.user.avatar
+            },
+        };
+    });
+
+    // And send the response back.
+    res.json({ tasks: listings });
 };
