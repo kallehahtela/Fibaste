@@ -160,3 +160,31 @@ productRouter.get('/listings');
 4. Update normal propreties (if the task is made by same user).
 5. Upload and update images (restrict image qty).
 6. And send response back.
+
+- `/:id` (delete single task)
+1. User must be authenticated.
+2. Validate task id.
+3. Remove if it is made by same user.
+4. Remove images as well.
+5. And send response back.
+
+- `/image/:taskId/:imageId` (delete only image of the product)
+1. User must be authenticated.
+2. Validate the product id.
+3. Remove the image from DB (if it is made by the same user).
+4. Remove from cloud as well.
+5. And send response back.
+
+- `/:id` (get task details)
+1. User must be authenticated (optional).
+2. Validate the task id.
+3. Find Task by the id.
+4. Format data.
+5. And send response back.
+
+- `/by-category/:category` (multiple tasks by category)
+1. User must be authenticated (optional).
+2. Validate the category.
+3. Find tasks by category (apply pagination if needed).
+4. Format data.
+5. And send response back.

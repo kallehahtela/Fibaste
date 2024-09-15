@@ -1,8 +1,9 @@
 import { UploadApiResponse } from "cloudinary";
 import { RequestHandler } from "express";
 import { isValidObjectId } from "mongoose";
-import cloudUploader from "src/cloud";
+import cloudUploader, { cloudApi } from "src/cloud";
 import ProductModel from "src/models/product";
+import { UserDocument } from "src/models/user";
 import { sendErrorRes } from "src/utils/helper";
 
 const uploadImage = (filePath: string): Promise<UploadApiResponse> => {
@@ -78,7 +79,7 @@ export const listNewTask: RequestHandler = async (req, res) => {
     res.status(201).json({ message: 'Added new task!' });
 };
 
-export const updateProduct: RequestHandler = async (req, res) => {
+export const updateTask: RequestHandler = async (req, res) => {
     //Validate incoming data.
     const { name, price, category, description, publishingDate, thumbnail } = req.body;
     const taskId = req.params.id;
@@ -106,15 +107,17 @@ export const updateProduct: RequestHandler = async (req, res) => {
     const { images } = req.files;
     const isMultipleImages = Array.isArray(images);
 
-    if (task.images.length >= 3) {
-        return sendErrorRes(res, 'Task already has 3 images!', 422);
-    }
-
+    const oldImages = task.images?.length || 0;
     if (isMultipleImages) {
-        if (task.images.length + images.length > 3) {
+        if (oldImages + images.length > 3) {
             return sendErrorRes(res, `Image files can't be more than 3!`, 422)
         }
     }
+
+    if (oldImages >= 3) {
+        return sendErrorRes(res, 'Task already has 3 images!', 422);
+    }
+
 
     let invalidFileType = false;
 
@@ -166,4 +169,121 @@ export const updateProduct: RequestHandler = async (req, res) => {
     await task.save();
 
     res.status(201).json({ message: 'Task updated successfully.' });
+};
+
+export const deleteTask: RequestHandler = async (req, res) => {
+    // Validate task id.
+    const taskId = req.params.id;
+    if (!isValidObjectId(taskId)) {
+        return sendErrorRes(res, '', 422)
+    }
+
+    // Remove if it is made by same user.
+    const task = await ProductModel.findOneAndDelete({ _id: taskId, owner: req.user.id });
+
+    if (!task) {
+        return sendErrorRes(res, 'Task not found!', 404);
+    }
+
+    // Remove images as well.
+    const images = task.images || [];
+    if (images.length) {
+        const ids = images.map(({ id }) => id);
+        await cloudApi.delete_resources(ids);
+    }
+
+    // nd send response back.
+    res.json({ message: 'Task removed succesfully.' });
+};
+
+export const deleteTaskImage: RequestHandler = async (req, res) => {
+    // Validate the product id.
+    const { taskId, imageId } = req.params;
+    if (!isValidObjectId(taskId)) {
+        return sendErrorRes(res, 'Invalid task id!', 422);
+    }
+
+    // Remove the image from DB (if it is made by the same user).
+    const task = await ProductModel.findOneAndUpdate(
+        { _id: taskId, owner: req.user.id },
+        {
+            $pull: {
+                images: { id: imageId },
+            },
+        },
+        {
+            new: true
+        }
+    );
+
+    if (!task) {
+        return sendErrorRes(res, 'Task not found!', 404);
+    }
+
+    // Checking that if we remove the thumbnail we change its value
+    if (task.thumbnail?.includes(imageId)) {
+        const images = task.images;
+        if (images) {
+            task.thumbnail = images[0].url;
+        } else {
+            task.thumbnail = '';
+        }
+        await task.save();
+    }
+
+    // Remove from cloud as well.
+    // Removing from cloud storage
+    await cloudUploader.destroy(imageId);
+
+    res.json({ message: 'Image removed successfully.' });
+};
+
+export const getTaskDetail: RequestHandler = async (req, res) => {
+    /*
+2. Validate the task id.
+3. Find Task by the id.
+4. Format data.
+5. And send response back.
+    */
+
+    // Validate the task id.
+    const { id } = req.params;
+    if (!isValidObjectId(id)) {
+        return sendErrorRes(res, 'Invalid task id!', 422);
+    }
+
+    // Find Task by the id.
+    const task = await ProductModel.findById(id).populate<{ owner: UserDocument }>('owner');
+    if (!task) {
+        return sendErrorRes(res, 'Task not found!', 404);
+    }
+
+    // Format data.
+    res.json({
+        task: {
+            task: task._id,
+            name: task.name,
+            description: task.description,
+            thumbnail: task.thumbnail,
+            category: task.category,
+            date: task.publishingDate,
+            price: task.price,
+            images: task.images?.map(({ url }) => url),
+            seller: {
+                id: task.owner._id,
+                name: task.owner.name,
+                avatar: task.owner.avatar?.url,
+            },
+        },
+    });
+};
+
+export const getTasksByCategory: RequestHandler = async (req, res) => {
+    /*
+1. User must be authenticated (optional).
+2. Validate the category.
+3. Find tasks by category (apply pagination if needed).
+4. Format data.
+5. And send response back.
+    */
 };
