@@ -4,6 +4,7 @@ import { Platform, SafeAreaView, StatusBar, StyleSheet } from 'react-native';
 export default function App() {
   return (
     <SafeAreaView>
+      <StatusBar barStyle={'default'} />
       <SignIn />
     </SafeAreaView>
   );

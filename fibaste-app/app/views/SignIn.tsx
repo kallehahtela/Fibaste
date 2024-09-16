@@ -1,29 +1,41 @@
+import colors from "@utils/colors";
+import FormInput from "@ui/FormInput";
+import WelcomeHeader from "@ui/WelcomeHeader";
 import { FC } from "react";
-import {StyleSheet, Image, SafeAreaView, Platform, StatusBar} from 'react-native';
+import {Button, StyleSheet, View } from 'react-native';
+import AppButton from "@ui/AppButton";
 
 interface Props {}
 
 const SignIn: FC<Props> = (props) => {
     return (
-        <SafeAreaView style={styles.container}>
-           <Image 
-            source={require('../../assets/hero.png')} 
-            style={styles.image} 
-            resizeMode="contain"
-            resizeMethod="resize" 
-           />
-        </SafeAreaView>
-    )
-}
+        <View style={styles.container}>
+            <WelcomeHeader />
+
+            <View style={styles.formContainer}>
+                <FormInput 
+                    placeholder='Email' 
+                    keyboardType='email-address' 
+                    autoCapitalize='none'
+                />  
+                <FormInput 
+                    placeholder='Password'
+                    secureTextEntry
+                />  
+
+                <AppButton title='Sign in'/>
+            </View>
+        </View>
+    );
+};
 
 const styles = StyleSheet.create({
     container: {
-        alignItems: 'center',
-        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+        padding: 15,
     },
-    image: {
-        width: 250,
-        height: 250,
+    
+    formContainer: {
+        marginTop: 30,
     }
 });
 
