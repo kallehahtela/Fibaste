@@ -8,10 +8,14 @@ import FormDivider from "@ui/FormDivider";
 import FormNavigator from "@ui/FormNavigator";
 import SocialsLogin from "@ui/SocialsLogin";
 import CustomKeyAvoidingView from "@ui/CustomKeyAvoidingView";
+import { NavigationProp, useNavigation } from "@react-navigation/native";
+import { AuthStackParamList } from "app/navigator/AuthNavigator";
 
 interface Props {}
 
 const SignIn: FC<Props> = (props) => {
+    const { navigate } = useNavigation<NavigationProp<AuthStackParamList>>();
+
     return (
        <CustomKeyAvoidingView>
             <View style={styles.innerContainer}>
@@ -30,13 +34,15 @@ const SignIn: FC<Props> = (props) => {
                         secureTextEntry
                     />  
 
-                    <AppButton title='Sign in'/>
+                    <AppButton title='Sign In'/>
 
                     <FormDivider />
 
                     <FormNavigator
                         leftTitle="Forget Password"
+                        onLeftPress={() => navigate('ForgetPassword')}
                         rightTitle="Sign Up"
+                        onRightPress={() => navigate('SignUp')}
                     />
 
                     <FormDivider />
