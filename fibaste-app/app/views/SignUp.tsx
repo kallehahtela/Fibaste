@@ -11,27 +11,8 @@ import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { AuthStackParamList } from "app/navigator/AuthNavigator";
 import * as yup from 'yup';
 import axios from 'axios';
-
-const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
-const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/
-
-yup.addMethod(yup.string, 'email', function validateEmail(message) {
-    return this.matches(emailRegex, {
-        message,
-        name: 'email',
-        excludeEmptyString: true,
-    });
-});
-
-export const newUserSchema = yup.object({
-    name: yup.string().required('Name is missing!'),
-    email: yup.string().email('Invalid email!').required('Email is missing!'),
-    password: yup
-    .string()
-    .required('Password is missing!')
-    .min(8, 'Password should be atleast 8 characters')
-    .matches(passwordRegex, 'Password should have atleast one capital letter, one number and one special letter!'),
-});
+import { newUserSchema, yupValidate } from "@utils/validator";
+import { runAxiosAsync } from "app/api/runAxiosAsync";
 
 interface Props {}
 
@@ -46,24 +27,12 @@ const SignUp: FC<Props> = (props) => {
     };
 
     const handleSubmit = async () => {
-        try {
-            const info = await newUserSchema.validate(userInfo);
-            const { data } = await axios.post('http://localhost:8000/auth/sign-up', info);
-            console.log(data);
-        } catch (error) {
-            if (error instanceof yup.ValidationError) {
-                console.log('Invalid form: ', error.message);
-            }
+        const { values, error } = await yupValidate(newUserSchema, userInfo);
+        const res = await runAxiosAsync<{message: string}>(
+            axios.post('http://localhost:8000/auth/sign-up', values)
+        );
 
-            if (error instanceof axios.AxiosError) {
-                const response = error.response;
-                if (response) {
-                    console.log('Api error: ', response.data.message);
-                }
-            }
-
-            console.log((error as any).message);
-        }
+        console.log(res);
     };
 
     const { name, email, password } = userInfo;
