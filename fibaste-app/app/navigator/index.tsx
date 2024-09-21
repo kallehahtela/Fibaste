@@ -2,6 +2,9 @@ import { FC } from 'react'
 import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import colors from '@utils/colors';
 import AuthNavigator from './AuthNavigator';
+import AppNavigator from './AppNavigator';
+import { useSelector } from 'react-redux';
+import { getAuthState } from 'app/store/auth';
 
 const MyTheme = {
   ...DefaultTheme,
@@ -11,10 +14,18 @@ const MyTheme = {
   },
 };
 
-const Navigator = () => {
+interface Props {};
+
+const Navigator: FC<Props> = (props) => {
+  const authState = useSelector(getAuthState);
+
+  console.log(authState);
+
+  const loggedIn = false;
+
   return (
     <NavigationContainer theme={MyTheme}>
-      <AuthNavigator /> 
+      {!loggedIn ? <AuthNavigator /> : <AppNavigator /> }
     </NavigationContainer>
   );
 };

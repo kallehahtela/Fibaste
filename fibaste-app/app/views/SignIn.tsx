@@ -1,7 +1,6 @@
-import colors from "@utils/colors";
 import FormInput from "@ui/FormInput";
 import WelcomeHeader from "@ui/WelcomeHeader";
-import { FC } from "react";
+import { FC, useState } from "react";
 import { StyleSheet, Text, View } from 'react-native';
 import AppButton from "@ui/AppButton";
 import FormDivider from "@ui/FormDivider";
@@ -10,11 +9,30 @@ import SocialsLogin from "@ui/SocialsLogin";
 import CustomKeyAvoidingView from "@ui/CustomKeyAvoidingView";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { AuthStackParamList } from "app/navigator/AuthNavigator";
+import { signInSchema, yupValidate } from "@utils/validator";
+import { showMessage } from "react-native-flash-message";
 
 interface Props {}
 
 const SignIn: FC<Props> = (props) => {
     const { navigate } = useNavigation<NavigationProp<AuthStackParamList>>();
+    const [userInfo, setUserInfo] = useState({
+        email: "",
+        password: "",
+      });
+
+    const handleSubmit = async () => {
+    const { values, error } = await yupValidate(signInSchema, userInfo);
+
+    if (error) return showMessage({ message: error, type: "danger" });
+    if (values) SignIn(values);
+    };
+
+    const handleChange = (name: string) => (text: string) => {
+    setUserInfo({ ...userInfo, [name]: text });
+    };
+
+    const { email, password } = userInfo;
 
     return (
        <CustomKeyAvoidingView>
@@ -27,14 +45,18 @@ const SignIn: FC<Props> = (props) => {
                         placeholder='Email' 
                         keyboardType='email-address' 
                         autoCapitalize='none'
+                        value={email}
+                        onChangeText={handleChange('email')}
                     />
                 
                     <FormInput 
                         placeholder='Password'
                         secureTextEntry
+                        value={password}
+                        onChangeText={handleChange('password')}
                     />  
 
-                    <AppButton title='Sign In'/>
+                    <AppButton title='Sign In' onPress={handleSubmit}/>
 
                     <FormDivider />
 

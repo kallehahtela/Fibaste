@@ -29,12 +29,21 @@ yup.addMethod(yup.string, 'email', function validateEmail(message) {
     });
 });
 
-export const newUserSchema = yup.object({
-    name: yup.string().required('Name is missing!'),
+const emailAndPasswordValidation = {
     email: yup.string().email('Invalid email!').required('Email is missing!'),
     password: yup
         .string()
         .required('Password is missing!')
         .min(8, 'Password should be atleast 8 characters')
         .matches(passwordRegex, 'Password should have atleast one capital letter, one number and one special letter!'),
+}
+
+export const newUserSchema = yup.object({
+    name: yup.string().required('Name is missing!'),
+    ...emailAndPasswordValidation
 });
+
+export const signInSchema = yup.object({
+    ...emailAndPasswordValidation
+});
+

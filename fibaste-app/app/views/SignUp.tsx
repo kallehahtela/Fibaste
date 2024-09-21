@@ -9,10 +9,10 @@ import FormNavigator from "@ui/FormNavigator";
 import CustomKeyAvoidingView from "@ui/CustomKeyAvoidingView";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { AuthStackParamList } from "app/navigator/AuthNavigator";
-import axios from 'axios';
 import { newUserSchema, yupValidate } from "@utils/validator";
 import { runAxiosAsync } from "app/api/runAxiosAsync";
 import { showMessage } from "react-native-flash-message";
+import client from "app/api/client";
 
 interface Props {}
 
@@ -21,11 +21,9 @@ const SignUp: FC<Props> = (props) => {
     const [busy, setBusy] = useState(false);
     const { navigate } = useNavigation<NavigationProp<AuthStackParamList>>();
 
-    const handleChange = (name: string) => {
-        return (text: string) => {
-            setUserInfo({...userInfo, [name]: text});
-        }
-    };
+    const handleChange = (name: string) => (text: string) => {
+        setUserInfo({...userInfo, [name]: text});
+    }
 
     const handleSubmit = async () => {
         const { values, error } = await yupValidate(newUserSchema, userInfo);
@@ -36,7 +34,7 @@ const SignUp: FC<Props> = (props) => {
         
         setBusy(true);
         const res = await runAxiosAsync<{message: string}>(
-            axios.post('http://localhost:8000/auth/sign-up', values)
+            client.post('/auth/sign-up', values)
         );
 
         if (res?.message) {
