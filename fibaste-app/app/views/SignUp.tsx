@@ -1,4 +1,3 @@
-import colors from "@utils/colors";
 import FormInput from "@ui/FormInput";
 import WelcomeHeader from "@ui/WelcomeHeader";
 import { FC, useState } from "react";
@@ -13,6 +12,7 @@ import { newUserSchema, yupValidate } from "@utils/validator";
 import { runAxiosAsync } from "app/api/runAxiosAsync";
 import { showMessage } from "react-native-flash-message";
 import client from "app/api/client";
+import useAuth from "app/hooks/useAuth";
 
 interface Props {}
 
@@ -20,6 +20,7 @@ const SignUp: FC<Props> = (props) => {
     const [userInfo, setUserInfo] = useState({name: '', email: '', password: ''});
     const [busy, setBusy] = useState(false);
     const { navigate } = useNavigation<NavigationProp<AuthStackParamList>>();
+    const { signIn } = useAuth();
 
     const handleChange = (name: string) => (text: string) => {
         setUserInfo({...userInfo, [name]: text});
@@ -39,6 +40,7 @@ const SignUp: FC<Props> = (props) => {
 
         if (res?.message) {
             showMessage({ message: res.message, type: 'success' });
+            signIn(values!);
         }
         setBusy(false);
     };

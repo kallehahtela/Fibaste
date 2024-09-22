@@ -107,7 +107,7 @@ export const signIn: RequestHandler = async (req, res) => {
     // If not valid send error otherwise generate access & refresh token.
     if (!isMatched) return sendErrorRes(res, 'Email or Password is incorrect!', 403);
 
-    const payload = { id: user._id };
+    const payload = { id: user.id };
     const accessToken = jwt.sign(payload, JWT_SECRET, {
         expiresIn: '15m'
     });
@@ -122,7 +122,7 @@ export const signIn: RequestHandler = async (req, res) => {
     // Send both tokens to user.
     res.json({
         profile: {
-            id: user._id,
+            id: user.id,
             email: user.email,
             name: user.name,
             verified: user.verified,

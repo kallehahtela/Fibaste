@@ -11,6 +11,7 @@ import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { AuthStackParamList } from "app/navigator/AuthNavigator";
 import { signInSchema, yupValidate } from "@utils/validator";
 import { showMessage } from "react-native-flash-message";
+import useAuth from "app/hooks/useAuth";
 
 interface Props {}
 
@@ -20,16 +21,19 @@ const SignIn: FC<Props> = (props) => {
         email: "",
         password: "",
       });
+    const { signIn } = useAuth();
 
     const handleSubmit = async () => {
-    const { values, error } = await yupValidate(signInSchema, userInfo);
+        const { values, error } = await yupValidate(signInSchema, userInfo);
 
-    if (error) return showMessage({ message: error, type: "danger" });
-    if (values) SignIn(values);
+        if (error) return showMessage({ message: error, type: "danger" });
+        if (values) {
+            signIn(values);
+        }
     };
 
     const handleChange = (name: string) => (text: string) => {
-    setUserInfo({ ...userInfo, [name]: text });
+        setUserInfo({ ...userInfo, [name]: text });
     };
 
     const { email, password } = userInfo;
@@ -40,7 +44,6 @@ const SignIn: FC<Props> = (props) => {
                 <WelcomeHeader />
 
                 <View style={styles.formContainer}>
-
                     <FormInput 
                         placeholder='Email' 
                         keyboardType='email-address' 

@@ -1,6 +1,6 @@
 import Navigator from 'app/navigator';
 import store from 'app/store';
-import { Platform, SafeAreaView, StatusBar, StyleSheet } from 'react-native';
+import { Modal, Platform, SafeAreaView, StatusBar, StyleSheet } from 'react-native';
 import FlashMessage from 'react-native-flash-message';
 import { Provider } from 'react-redux';
 

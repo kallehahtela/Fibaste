@@ -1,7 +1,14 @@
 import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from ".";
+import { string } from "yup";
 
-type Profile = {};
+export type Profile = {
+    id: string;
+    email: string;
+    name: string;
+    verified: boolean;
+    avatar?: string;
+};
 
 interface AuthState {
     profile: null | Profile;
