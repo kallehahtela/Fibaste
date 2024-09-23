@@ -3,6 +3,7 @@ import AppNavigator from './AppNavigator';
 import ProfileNavigator from './ProfileNavigator';
 import { AntDesign } from '@expo/vector-icons';
 import NewListing from '@views/NewListing';
+import { Platform } from 'react-native';
 
 const Tab = createBottomTabNavigator();
 
@@ -12,6 +13,10 @@ const getOptions = (iconName: string, title: string): BottomTabNavigationOptions
             return <AntDesign name={iconName as any} size={size} color={color} />;
         },
         title: title,
+        tabBarStyle: { 
+            paddingBottom: Platform.OS === 'ios' ? 0 : 5,
+            height: Platform.OS === 'ios' ? 50 : 65,
+        },
     };
 };
 

@@ -19,6 +19,9 @@
       "@store/*": [
         "app/store/*"
       ],
+      "@icons/*": [
+        "app/icons/*"
+      ],
     }
   }
 }

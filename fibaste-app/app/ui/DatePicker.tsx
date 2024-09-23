@@ -1,29 +1,47 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { FC } from 'react';
+import { View, Text, StyleSheet, Platform, Pressable } from 'react-native';
+import { FC, useState } from 'react';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import colors from '@utils/colors';
+import { formatDate } from '@utils/date';
 
 interface Props {
     title: string;
     value: Date;
     onChange(value: Date): void;
-}
+};
+
+const isIOS = Platform.OS === 'ios';
 
 const DatePicker: FC<Props> = ({ title, value, onChange }) => {
-    return (
-        <View style={styles.container}>
-            <Text style={styles.title}>{title}</Text>
+    const [showPicker, setShowPicker] = useState(false);
 
-            <DateTimePicker 
+    const visible = isIOS ? true : showPicker;
+
+    const onPress = () => {
+        if (isIOS) return;
+        setShowPicker(true);
+    };
+
+    return (
+        <Pressable onPress={onPress} style={styles.container}>
+            <Text style={styles.title}>{title}</Text>
+            {!isIOS && (
+                <Text style={styles.value}>
+                    {formatDate(value.toISOString(), 'dd LLL yyyy')}
+                </Text>
+            )}
+
+            {visible ? (<DateTimePicker 
                 testID='dateTimePicker' 
-                    value={value} 
-                    onChange={(_, date) => {
-                        if (date) {
-                            onChange(date);
-                        }
-                    }}
+                value={value} 
+                onChange={(_, date) => {
+                    if (date) onChange(date);
+
+                    if (!isIOS) setShowPicker(false)
+                }}
             />
-        </View>
+        ): null}
+        </Pressable>
     );
 };
 
@@ -33,9 +51,16 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         width: '100%',
         marginBottom: 15,
+        padding: isIOS ? 0 : 8,
+        borderWidth: isIOS ? 0 : 1,
+        borderColor: colors.deActive,
+        borderRadius: 5,
     },
     title: {
         color: colors.primary,
+    },
+    value: {
+        paddingLeft: 10,
     },
 });
 
