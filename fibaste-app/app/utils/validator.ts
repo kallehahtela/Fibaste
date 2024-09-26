@@ -47,3 +47,18 @@ export const signInSchema = yup.object({
     ...emailAndPasswordValidation
 });
 
+export const newProductSchema = yup.object({
+    name: yup.string().required('Task name is missing!'),
+    description: yup.string().required('Task description is missing!'),
+    category: yup.string().required('Task category is missing!'),
+    price: yup
+        .string()
+        .transform((value) => {
+            if (isNaN(+value)) return '';
+
+            return value;
+        })
+        .required('Task price is missing!'),
+    publishingDate: yup.date().required('Task publishing date is missing!'),
+});
+
