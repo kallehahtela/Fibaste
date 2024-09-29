@@ -1,8 +1,7 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getAuthState, updateAuthState } from "@store/auth";
 import asyncStorage, { Keys } from "@utils/asyncStorage";
-import client from "app/api/client";
-import { runAxiosAsync } from "app/api/runAxiosAsync";
+import client from "@api/client";
+import { runAxiosAsync } from "@api/runAxiosAsync";
 import { useDispatch, useSelector } from "react-redux";
 
 export interface SignInRes {
@@ -25,8 +24,8 @@ type UserInfo = {
 };
 
 const useAuth = () => {
-    const authState = useSelector(getAuthState);
     const dispatch = useDispatch()
+    const authState = useSelector(getAuthState);
 
     const signIn = async (userInfo: UserInfo) => {
         dispatch(updateAuthState({ profile: null, pending: true }));
@@ -51,7 +50,7 @@ const useAuth = () => {
 
     const loggedIn = authState.profile ? true : false;
 
-    return { signIn, authState, loggedIn }
+    return { signIn, authState, loggedIn };
 };
 
 export default useAuth;

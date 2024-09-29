@@ -1,9 +1,9 @@
-import { baseURL } from "app/api/client";
+import { baseURL } from "@api/client";
 import axios from "axios";
 import useAuth from "./useAuth";
 import createAuthRefreshInterceptor from "axios-auth-refresh";
 import asyncStorage, { Keys } from "@utils/asyncStorage";
-import { runAxiosAsync } from "app/api/runAxiosAsync";
+import { runAxiosAsync } from "@api/runAxiosAsync";
 import { useDispatch } from "react-redux";
 import { updateAuthState } from "@store/auth";
 
@@ -13,7 +13,7 @@ type Response = {
     tokens: {
         refresh: string;
         access: string;
-    },
+    };
 };
 
 const useClient = () => {
@@ -21,6 +21,19 @@ const useClient = () => {
     const dispatch = useDispatch();
 
     const token = authState.profile?.accessToken;
+
+    authClient.interceptors.request.use(
+        (config) => {
+            if (!config.headers.Authorization) {
+                config.headers.Authorization = 'Bearer ' + token;
+            }
+
+            return config;
+        },
+        (error) => {
+            return Promise.reject(error);
+        }
+    );
 
     const refreshAuthLogic = async (failedRequest: any) => {
         // read refresh token from async storage

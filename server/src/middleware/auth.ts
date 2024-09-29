@@ -23,49 +23,49 @@ declare global {
 const JWT_SECRET = process.env.JWT_SECRET!;
 
 export const isAuth: RequestHandler = async (req, res, next) => {
+    /**
+1. Read authorization header
+2. See if we have the token.
+3. Send error if there is no token.
+4. Verify the token (we have to use jwt.verify).
+5. Take out the user id from token (we will have it as payload).
+6. Check if we have the user with this id.
+7. Send error if not.
+8. Attach user profile inside req object.
+9. Call `next` function
+10. Handle error for expired tokens. 
+     **/
+
     try {
-        // Read authorization header.
         const authToken = req.headers.authorization;
+        if (!authToken) return sendErrorRes(res, "unauthorized request!", 403);
 
-        // See if we have the token.
-        // Send error if there is no token.
-        if (!authToken) return sendErrorRes(res, 'Unauthorized request', 403);
-
-        // Verify the token (we have to use jwt.verify).
-        const token = authToken.split('Bearer ')[1]; // ['', 'eyJhbGciOiJIUzI1NiIsInR5cC...']
-
-        // Take out the user id from token (we will use it as payload).
+        const token = authToken.split("Bearer ")[1];
         const payload = jwt.verify(token, JWT_SECRET) as { id: string };
 
-        // Check if we have the user with this id.
-        const user = await UserModel.findById(payload.id)
+        const user = await UserModel.findById(payload.id);
+        if (!user) return sendErrorRes(res, "unauthorized request!", 403);
 
-        // Send error if not.
-        if (!user) return sendErrorRes(res, 'Unauthorized request', 403);
-
-        // Attach user profile inside req object.
         req.user = {
-            id: user.id,
+            id: user._id,
             name: user.name,
             email: user.email,
             verified: user.verified,
             avatar: user.avatar?.url,
         };
 
-        // Call `next` function.
-        next()
+        next();
     } catch (error) {
-        // Handle error for expired tokens.
         if (error instanceof TokenExpiredError) {
-            sendErrorRes(res, 'Session expired!', 401);
+            return sendErrorRes(res, "Session expired!", 401);
         }
 
         if (error instanceof JsonWebTokenError) {
-            sendErrorRes(res, 'Unauthorized access', 401);
+            return sendErrorRes(res, "unauthorized assess!", 401);
         }
 
         next(error);
-    };
+    }
 };
 
 export const isValidPassResetToken: RequestHandler = async (req, res, next) => {

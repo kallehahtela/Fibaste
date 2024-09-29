@@ -16,7 +16,14 @@ const uploadImage = (filePath: string): Promise<UploadApiResponse> => {
 };
 
 export const listNewTask: RequestHandler = async (req, res) => {
-    // Create Product
+    /*
+User must be authenticated.
+User can upload images as well.
+Validate incoming data.
+Create Task.
+Validate and Upload File (or Files) - note (restrict image qty).
+And send the response back.
+    */
     const { name, price, category, description, publishingDate } = req.body;
     const newProduct = new ProductModel({
         owner: req.user.id,
@@ -24,16 +31,15 @@ export const listNewTask: RequestHandler = async (req, res) => {
         price,
         category,
         description,
-        publishingDate
+        publishingDate,
     });
 
-    // Validate and Uplaod File (or Files) - note (restrict image qty).
     const { images } = req.files;
 
     const isMultipleImages = Array.isArray(images);
 
     if (isMultipleImages && images.length > 3) {
-        return sendErrorRes(res, `Image files can't be more than 3!`, 422)
+        return sendErrorRes(res, "Image files can not be more than 3!", 422);
     }
 
     let invalidFileType = false;
@@ -41,22 +47,28 @@ export const listNewTask: RequestHandler = async (req, res) => {
     // if this is the case we have multiple images
     if (isMultipleImages) {
         for (let img of images) {
-            if (!img.mimetype?.startsWith('image')) {
+            if (!img.mimetype?.startsWith("image")) {
                 invalidFileType = true;
                 break;
             }
         }
     } else {
         if (images) {
-            if (!images.mimetype?.startsWith('image')) {
+            if (!images.mimetype?.startsWith("image")) {
                 invalidFileType = true;
             }
         }
     }
 
-    if (invalidFileType) return sendErrorRes(res, 'Invalid file type, files must be image type!', 422);
+    if (invalidFileType)
+        return sendErrorRes(
+            res,
+            "Invalid file type, files must be image type!",
+            422
+        );
 
-    // File upload
+    // FILE UPLOAD
+
     if (isMultipleImages) {
         const uploadPromise = images.map((file) => uploadImage(file.filepath));
         // Wait for all file uploads to complete
@@ -65,6 +77,7 @@ export const listNewTask: RequestHandler = async (req, res) => {
         newProduct.images = uploadResults.map(({ secure_url, public_id }) => {
             return { url: secure_url, id: public_id };
         });
+
         newProduct.thumbnail = newProduct.images[0].url;
     } else {
         if (images) {
@@ -76,19 +89,27 @@ export const listNewTask: RequestHandler = async (req, res) => {
 
     await newProduct.save();
 
-    // And send the response back.
-    res.status(201).json({ message: 'Added new task!' });
+    res.status(201).json({ message: "Added new task!" });
 };
 
 export const updateTask: RequestHandler = async (req, res) => {
-    //Validate incoming data.
-    const { name, price, category, description, publishingDate, thumbnail } = req.body;
-    const taskId = req.params.id;
-    if (!isValidObjectId(taskId)) return sendErrorRes(res, 'Invalid task id!', 422);
+    /*
+User must be authenticated.
+User can upload images as well.
+Validate incoming data.
+Update normal properties (if the task is made by the same user).
+Upload and update images (restrict image qty).
+And send the response back.
+    */
 
-    // Update normal properties (if the task is made by same user).
-    const task = await ProductModel.findOneAndUpdate(
-        { _id: taskId, owner: req.user.id },
+    const { name, price, category, description, publishingDate, thumbnail } =
+        req.body;
+    const productId = req.params.id;
+    if (!isValidObjectId(productId))
+        return sendErrorRes(res, "Invalid task id!", 422);
+
+    const product = await ProductModel.findOneAndUpdate(
+        { _id: productId, owner: req.user.id },
         {
             name,
             price,
@@ -100,269 +121,269 @@ export const updateTask: RequestHandler = async (req, res) => {
             new: true,
         }
     );
-    if (!task) return sendErrorRes(res, 'Task not found!', 404);
+    if (!product) return sendErrorRes(res, "Task not found!", 404);
 
-    if (typeof thumbnail === 'string') task.thumbnail = thumbnail;
+    if (typeof thumbnail === "string") product.thumbnail = thumbnail;
 
-    // Upload and update images (restrict image qty).
     const { images } = req.files;
     const isMultipleImages = Array.isArray(images);
 
-    const oldImages = task.images?.length || 0;
     if (isMultipleImages) {
-        if (oldImages + images.length > 3) {
-            return sendErrorRes(res, `Image files can't be more than 3!`, 422)
-        }
+        const oldImages = product.images?.length || 0;
+        if (oldImages + images.length > 5)
+            return sendErrorRes(res, "Image files can not be more than 5!", 422);
     }
-
-    if (oldImages >= 3) {
-        return sendErrorRes(res, 'Task already has 3 images!', 422);
-    }
-
 
     let invalidFileType = false;
 
     // if this is the case we have multiple images
     if (isMultipleImages) {
         for (let img of images) {
-            if (!img.mimetype?.startsWith('image')) {
+            if (!img.mimetype?.startsWith("image")) {
                 invalidFileType = true;
                 break;
             }
         }
     } else {
         if (images) {
-            if (!images.mimetype?.startsWith('image')) {
+            if (!images.mimetype?.startsWith("image")) {
                 invalidFileType = true;
             }
         }
     }
 
-    if (invalidFileType) return sendErrorRes(res, 'Invalid file type, files must be image type!', 422);
+    if (invalidFileType)
+        return sendErrorRes(
+            res,
+            "Invalid file type, files must be image type!",
+            422
+        );
 
-    // File upload
+    // FILE UPLOAD
+
     if (isMultipleImages) {
         const uploadPromise = images.map((file) => uploadImage(file.filepath));
         // Wait for all file uploads to complete
         const uploadResults = await Promise.all(uploadPromise);
-        // Add the image URLs and public IDs to the product's images field
+        // Add the image URLs and public IDs to the task's images field
         const newImages = uploadResults.map(({ secure_url, public_id }) => {
             return { url: secure_url, id: public_id };
         });
 
-        if (task.images) {
-            task.images.push(...newImages);
-        }
-        else {
-            task.images = newImages;
-        }
+        if (product.images) product.images.push(...newImages);
+        else product.images = newImages;
     } else {
         if (images) {
             const { secure_url, public_id } = await uploadImage(images.filepath);
-            if (task.images) {
-                task.images.push({ url: secure_url, id: public_id });
-            } else {
-                task.images = [{ url: secure_url, id: public_id }];
-            }
+            if (product.images)
+                product.images.push({ url: secure_url, id: public_id });
+            else product.images = [{ url: secure_url, id: public_id }];
         }
     }
 
-    await task.save();
+    await product.save();
 
-    res.status(201).json({ message: 'Task updated successfully.' });
+    res.status(201).json({ message: "Task updated successfully." });
 };
 
 export const deleteTask: RequestHandler = async (req, res) => {
-    // Validate task id.
-    const taskId = req.params.id;
-    if (!isValidObjectId(taskId)) {
-        return sendErrorRes(res, '', 422)
-    }
+    /*
+    User must be authenticated.
+    Validate the task id.
+    Remove if it is made by the same user.
+    Remove images as well.
+    And send the response back.
+        */
 
-    // Remove if it is made by same user.
-    const task = await ProductModel.findOneAndDelete({ _id: taskId, owner: req.user.id });
+    const productId = req.params.id;
+    if (!isValidObjectId(productId))
+        return sendErrorRes(res, "Invalid task id!", 422);
 
-    if (!task) {
-        return sendErrorRes(res, 'Task not found!', 404);
-    }
+    const product = await ProductModel.findOneAndDelete({
+        _id: productId,
+        owner: req.user.id,
+    });
 
-    // Remove images as well.
-    const images = task.images || [];
+    if (!product) return sendErrorRes(res, "Task not found!", 404);
+
+    const images = product.images || [];
     if (images.length) {
         const ids = images.map(({ id }) => id);
         await cloudApi.delete_resources(ids);
     }
 
-    // nd send response back.
-    res.json({ message: 'Task removed succesfully.' });
+    res.json({ message: "Task removed successfully." });
 };
 
 export const deleteTaskImage: RequestHandler = async (req, res) => {
-    // Validate the product id.
-    const { taskId, imageId } = req.params;
-    if (!isValidObjectId(taskId)) {
-        return sendErrorRes(res, 'Invalid task id!', 422);
-    }
+    /*
+1. User must be authenticated.
+2. Validate the task id.
+3. Remove the image from db (if it is made by the same user).
+4. Remove from cloud as well.
+5. And send the response back.
+    */
 
-    // Remove the image from DB (if it is made by the same user).
-    const task = await ProductModel.findOneAndUpdate(
-        { _id: taskId, owner: req.user.id },
+    const { productId, imageId } = req.params;
+    if (!isValidObjectId(productId))
+        return sendErrorRes(res, "Invalid task id!", 422);
+
+    const product = await ProductModel.findOneAndUpdate(
+        { _id: productId, owner: req.user.id },
         {
             $pull: {
                 images: { id: imageId },
             },
         },
-        {
-            new: true
-        }
+        { new: true }
     );
 
-    if (!task) {
-        return sendErrorRes(res, 'Task not found!', 404);
+    if (!product) return sendErrorRes(res, "Task not found!", 404);
+
+    if (product.thumbnail?.includes(imageId)) {
+        const images = product.images;
+        if (images) product.thumbnail = images[0].url;
+        else product.thumbnail = "";
+        await product.save();
     }
 
-    // Checking that if we remove the thumbnail we change its value
-    if (task.thumbnail?.includes(imageId)) {
-        const images = task.images;
-        if (images) {
-            task.thumbnail = images[0].url;
-        } else {
-            task.thumbnail = '';
-        }
-        await task.save();
-    }
-
-    // Remove from cloud as well.
-    // Removing from cloud storage
+    // removing from cloud storage
     await cloudUploader.destroy(imageId);
 
-    res.json({ message: 'Image removed successfully.' });
+    res.json({ message: "Image removed successfully." });
 };
 
 export const getTaskDetail: RequestHandler = async (req, res) => {
     /*
-2. Validate the task id.
-3. Find Task by the id.
+1. User must be authenticated (optional).
+2. Validate the product id.
+3. Find Product by the id.
 4. Format data.
-5. And send response back.
-    */
+5. And send the response back.
 
-    // Validate the task id.
+   */
+
     const { id } = req.params;
-    if (!isValidObjectId(id)) {
-        return sendErrorRes(res, 'Invalid task id!', 422);
-    }
+    if (!isValidObjectId(id))
+        return sendErrorRes(res, "Invalid product id!", 422);
 
-    // Find Task by the id.
-    const task = await ProductModel.findById(id).populate<{ owner: UserDocument }>('owner');
-    if (!task) {
-        return sendErrorRes(res, 'Task not found!', 404);
-    }
+    const product = await ProductModel.findById(id).populate<{
+        owner: UserDocument;
+    }>("owner");
+    if (!product) return sendErrorRes(res, "Product not found!", 404);
 
-    // Format data.
     res.json({
-        task: {
-            task: task._id,
-            name: task.name,
-            description: task.description,
-            thumbnail: task.thumbnail,
-            category: task.category,
-            date: task.publishingDate,
-            price: task.price,
-            images: task.images?.map(({ url }) => url),
+        product: {
+            id: product._id,
+            name: product.name,
+            description: product.description,
+            thumbnail: product.thumbnail,
+            category: product.category,
+            date: product.publishingDate,
+            price: product.price,
+            image: product.images?.map(({ url }) => url),
             seller: {
-                id: task.owner._id,
-                name: task.owner.name,
-                avatar: task.owner.avatar?.url,
+                id: product.owner._id,
+                name: product.owner.name,
+                avatar: product.owner.avatar?.url,
             },
         },
     });
 };
 
 export const getTasksByCategory: RequestHandler = async (req, res) => {
-    // Validate the category.
-    const { category } = req.params;
-    const { pageNo = '1', limit = '10' } = req.query as { pageNo: string, limit: string };
-    if (!categories.includes(category)) {
-        return sendErrorRes(res, 'Invalid category', 422);
-    }
+    /*
+1. User must be authenticated (optional).
+2. Validate the category.
+3. Find products by category (apply pagination if needed).
+4. Format data.
+5. And send the response back.
+   */
 
-    // Find tasks by category (apply pagination if needed).
-    const tasks = await ProductModel.find({ category })
-        .sort('-createdAt')
+    const { category } = req.params;
+    const { pageNo = "1", limit = "10" } = req.query as {
+        pageNo: string;
+        limit: string;
+    };
+    if (!categories.includes(category))
+        return sendErrorRes(res, "Invalid category!", 422);
+
+    const products = await ProductModel.find({ category })
+        .sort("-createdAt")
         .skip((+pageNo - 1) * +limit)
         .limit(+limit);
 
-    // Format data.
-    const listings = tasks.map(t => {
+    const listings = products.map((p) => {
         return {
-            id: t._id,
-            name: t.name,
-            thumbnail: t.thumbnail,
-            category: t.category,
-            price: t.price,
-        }
-    });
-
-    //And send response back.
-    res.json({ tasks: listings });
-};
-
-export const getLatest: RequestHandler = async (req, res) => {
-    // Find all the tasks with sorted date (apply limit/pagination if needed).
-    const tasks = await ProductModel.find().sort('-createdAt').limit(10);
-
-    // Format data.
-    const listings = tasks.map((t) => {
-        return {
-            id: t._id,
-            name: t.name,
-            thumbnail: t.thumbnail,
-            category: t.category,
-            price: t.price,
+            id: p._id,
+            name: p.name,
+            thumbnail: p.thumbnail,
+            category: p.category,
+            price: p.price,
         };
     });
 
-    // And send the response back.
-    res.json({ tasks: listings });
+    res.json({ products: listings });
+};
+
+export const getLatest: RequestHandler = async (req, res) => {
+    /*
+1. User must be authenticated (optional).
+2. Find all the products with sorted date (apply limit/pagination if needed).
+3. Format data.
+4. And send the response back.
+    */
+
+    const products = await ProductModel.find().sort("-createdAt").limit(10);
+
+    const listings = products.map((p) => {
+        return {
+            id: p._id,
+            name: p.name,
+            thumbnail: p.thumbnail,
+            category: p.category,
+            price: p.price,
+        };
+    });
+
+    res.json({ products: listings });
 };
 
 export const getListings: RequestHandler = async (req, res) => {
     /*
-    1. User must be authenticated.
-    2. Find all the products created by this user (apply pagination if needed).
-    3. Format data.
-    4. And send response back.
-    */
-    const { pageNo = '1', limit = '10' } = req.query as {
+1. User must be authenticated.
+2. Find all the products created by this user (apply pagination if needed).
+3. Format data.
+4. And send the response back.
+   */
+
+    const { pageNo = "1", limit = "10" } = req.query as {
         pageNo: string;
         limit: string;
     };
 
-    const tasks = await ProductModel.find({ owner: req.user.id })
-        .sort('-createdAt')
+    const products = await ProductModel.find({ owner: req.user.id })
+        .sort("-createdAt")
         .skip((+pageNo - 1) * +limit)
         .limit(+limit);
 
-    // Format data.
-    const listings = tasks.map((t) => {
+    const listings = products.map((p) => {
         return {
-            id: t._id,
-            name: t.name,
-            thumbnail: t.thumbnail,
-            category: t.category,
-            price: t.price,
-            images: t.images?.map(i => i.url),
-            date: t.publishingDate,
-            description: t.description,
+            id: p._id,
+            name: p.name,
+            thumbnail: p.thumbnail,
+            category: p.category,
+            price: p.price,
+            image: p.images?.map((i) => i.url),
+            date: p.publishingDate,
+            description: p.description,
             seller: {
                 id: req.user.id,
                 name: req.user.name,
-                avatar: req.user.avatar
+                avatar: req.user.avatar,
             },
         };
     });
 
-    // And send the response back.
-    res.json({ tasks: listings });
+    res.json({ products: listings });
 };

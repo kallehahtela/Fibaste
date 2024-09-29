@@ -22,6 +22,12 @@
       "@icons/*": [
         "app/icons/*"
       ],
+      "@api/*": [
+        "app/api/*"
+      ],
+      "@navigator/*": [
+        "app/navigator/*"
+      ],
     }
   }
 }

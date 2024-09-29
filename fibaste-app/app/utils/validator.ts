@@ -36,7 +36,7 @@ const emailAndPasswordValidation = {
         .required('Password is missing!')
         .min(8, 'Password should be atleast 8 characters')
         .matches(passwordRegex, 'Password should have atleast one capital letter, one number and one special letter!'),
-}
+};
 
 export const newUserSchema = yup.object({
     name: yup.string().required('Name is missing!'),
@@ -47,7 +47,7 @@ export const signInSchema = yup.object({
     ...emailAndPasswordValidation
 });
 
-export const newProductSchema = yup.object({
+export const newTaskSchema = yup.object({
     name: yup.string().required('Task name is missing!'),
     description: yup.string().required('Task description is missing!'),
     category: yup.string().required('Task category is missing!'),
@@ -61,4 +61,3 @@ export const newProductSchema = yup.object({
         .required('Task price is missing!'),
     publishingDate: yup.date().required('Task publishing date is missing!'),
 });
-

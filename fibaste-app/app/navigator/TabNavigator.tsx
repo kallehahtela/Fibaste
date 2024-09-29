@@ -36,7 +36,7 @@ const TabNavigator = () => {
             <Tab.Screen 
                 name='ProfileNavigator' 
                 component={ProfileNavigator} 
-                options={getOptions('search1', 'Explore')}
+                options={getOptions('user', 'Profile')}
             />
            
         </Tab.Navigator>

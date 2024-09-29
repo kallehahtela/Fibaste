@@ -18,7 +18,7 @@ export const runAxiosAsync = async <T>(
         const response = await promise;
 
         // Log the response for debugging purposes
-        console.log('Success Response:', response);
+        //console.log('Success Response:', response);
 
         return response.data;
     } catch (error) {
@@ -28,7 +28,7 @@ export const runAxiosAsync = async <T>(
             const response = error.response;
 
             if (response) {
-                console.log('Error Response:', response);
+                //console.log('Error Response:', response);
 
                 // Accessing the message safely (this may very depending on your API)
                 message = response.data?.message || 'Server error occured';

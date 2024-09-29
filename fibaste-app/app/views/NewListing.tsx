@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Pressable, FlatList, Image } from 'react-native';
+import { View, Text, StyleSheet, Pressable, } from 'react-native';
 import { FC, useState } from 'react';
 import FormInput from '@ui/FormInput';
 import { FontAwesome5, AntDesign } from '@expo/vector-icons';
@@ -12,12 +12,11 @@ import CustomKeyAvoidingView from '@ui/CustomKeyAvoidingView';
 import * as ImagePicker from 'expo-image-picker';
 import { showMessage } from 'react-native-flash-message';
 import HorizontalImageList from '@components/HorizontalImageList';
-import { newProductSchema, yupValidate } from '@utils/validator';
+import { newTaskSchema, yupValidate } from '@utils/validator';
 import mime from 'mime';
 import useClient from 'app/hooks/useClient';
 import { runAxiosAsync } from 'app/api/runAxiosAsync';
 import LoadingSpinner from '@ui/LoadingSpinner';
-import asyncStorage from '@utils/asyncStorage';
 
 interface Props {}
 
@@ -29,25 +28,25 @@ const defaultInfo = {
   publishingDate: new Date(),
 };
 
-const imageOptions = [{value: 'Remove Image', id: 'remove'}];
+const imageOptions = [{ value: 'Remove Image', id: 'remove' }];
 
 const NewListing: FC<Props> = (props) => {
-  const [taskInfo, setTaskInfo] = useState({...defaultInfo})
+  const [taskInfo, setTaskInfo] = useState({ ...defaultInfo });
   const [busy, setBusy] = useState(false)
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showImageOptions, setShowImageOptions] = useState(false);
   const [images, setImages] = useState<string[]>([]);
   const [selectedImage, setSelectedImage] = useState('');
-  const { authClient }  = useClient();
+  const { authClient } = useClient();
 
   const { name, description, category, price, publishingDate } = taskInfo;
 
   const handleChange = (name: string) => (text: string) => {
-    setTaskInfo({...taskInfo, [name]: text})
+    setTaskInfo({ ...taskInfo, [name]: text });
   };
 
   const handleSubmit = async () => {
-    const { error } = await yupValidate(newProductSchema, taskInfo);
+    const { error } = await yupValidate(newTaskSchema, taskInfo);
     if (error) return showMessage({ message: error, type: "danger" });
 
     setBusy(true);
@@ -90,9 +89,6 @@ const NewListing: FC<Props> = (props) => {
     }
 
     console.log(res);
-
-    //  formData.append("name", productInfo.name)
-    //  formData.append("category", productInfo.category)
   };
 
   const handleOnImageSelection = async () => {
@@ -117,21 +113,24 @@ const NewListing: FC<Props> = (props) => {
     <CustomKeyAvoidingView>
       <View style={styles.container}>
         <View style={styles.imageContainer}>
-          <Pressable onPress={handleOnImageSelection} style={styles.fileSelector}>
+          <Pressable 
+            onPress={handleOnImageSelection} 
+            style={styles.fileSelector}
+          >
               <View style={styles.iconContainer}>
-                  <FontAwesome5 name="images" size={24} color="black" />
+                  <FontAwesome5 name="images" size={24} color={colors.primary} />
               </View>
               <Text style={styles.btnTitle}>Add Images</Text>
           </Pressable>
 
-          <HorizontalImageList images={images} 
+          <HorizontalImageList 
+            images={images} 
             onLongPress={(img) => {
               setSelectedImage(img);
               setShowImageOptions(true);
-          }} 
+            }}
           />
         </View>
-
 
         <FormInput 
           value={name} 
@@ -165,7 +164,13 @@ const NewListing: FC<Props> = (props) => {
           onChangeText={handleChange('description')}  
         />
 
-        <AppButton title='List Task' onPress={handleSubmit} />
+        <AppButton 
+          title='List Task' 
+          onPress={() => {
+            console.log('New task listed...');
+            handleSubmit();
+          }} 
+        />
 
         <OptionModal 
           visible={showCategoryModal}
