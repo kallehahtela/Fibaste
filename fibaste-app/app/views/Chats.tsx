@@ -1,10 +1,12 @@
 import { View, Text } from 'react-native'
 import React from 'react'
+import AppHeader from '@components/AppHeader'
+import BackButton from '@ui/BackButton'
 
 const Chats = () => {
   return (
     <View>
-      <Text>Chats</Text>
+      <AppHeader backButton={<BackButton />} />
     </View>
   )
 }
