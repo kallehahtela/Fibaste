@@ -13,7 +13,7 @@ export type Product = {
     category: string;
     price: number;
     image?: string[];
-    date: Date;
+    date: string;
     description: string;
     seller: {
         id: string;
@@ -30,7 +30,7 @@ const SingleProduct: FC<Props> = ({ route }) => {
         <>
             <AppHeader backButton={<BackButton />} />
             <View style={styles.container}>
-                <ProductDetail />
+                {product ? <ProductDetail product={product} /> : <></>}
             </View>
         </>
     );
