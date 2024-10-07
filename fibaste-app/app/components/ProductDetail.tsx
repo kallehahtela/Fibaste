@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { FC } from 'react';
-import { Product } from '@views/SingleProduct';
+import { Product } from '@store/listings';
 import { formatDate } from '@utils/date';
 import size from '@utils/size';
 import AvatarView from '@ui/AvatarView';
@@ -15,27 +15,30 @@ interface Props {
 const ProductDetail: FC<Props> = ({ product }) => {
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {/* Images */}
-      <ImageSlider images={product.image} />
+    <View style={styles.container}>
+      <ScrollView>
+        {/* Images */}
+        <ImageSlider images={product.image} />
 
-      <Text style={styles.category}>{product.category}</Text>
-      <Text style={styles.price}>{formatPrice(product.price)}</Text>
-      <Text style={styles.date}>Published on: {formatDate(product.date, 'dd LLL yyyy')}</Text>
-      <Text style={styles.name}>{product.name}</Text>
-      <Text style={styles.description}>{product.description}</Text>
+        <Text style={styles.category}>{product.category}</Text>
+        <Text style={styles.price}>{formatPrice(product.price)}</Text>
+        <Text style={styles.date}>Published on: {formatDate(product.date, 'dd LLL yyyy')}</Text>
+        <Text style={styles.name}>{product.name}</Text>
+        <Text style={styles.description}>{product.description}</Text>
 
-      <View style={styles.profileContainer}>
-        <AvatarView uri={product.seller.avatar} size={60} />
-        <Text style={styles.profileName}>{product.seller.name}</Text>
-      </View>
-    </ScrollView>
+        <View style={styles.profileContainer}>
+          <AvatarView uri={product.seller.avatar} size={60} />
+          <Text style={styles.profileName}>{product.seller.name}</Text>
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     padding: size.padding,
+    flex: 1,
   },
   category: {
     marginTop: 15,

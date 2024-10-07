@@ -4,7 +4,9 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Profile from '@views/Profile';
 import Chats from '@views/Chats';
 import Listings from '@views/Listings';
-import SingleProduct, { Product } from '@views/SingleProduct';
+import SingleProduct from '@views/SingleProduct';
+import { Product } from '@store/listings';
+import ChatWindow from '@views/ChatWindow';
 
 interface Props {}
 
@@ -13,6 +15,7 @@ export type ProfileNavigatorParamList = {
   Chats: undefined;
   Listings: undefined;
   SingleProduct: {product?: Product};
+  ChatWindow: undefined;
 };
 
 const Stack = createNativeStackNavigator<ProfileNavigatorParamList>();
@@ -24,6 +27,7 @@ const ProfileNavigator: FC<Props> = (props) => {
         <Stack.Screen name="Chats" component={Chats} />
         <Stack.Screen name="Listings" component={Listings} />
         <Stack.Screen name="SingleProduct" component={SingleProduct} />
+        <Stack.Screen name="ChatWindow" component={ChatWindow} />
       </Stack.Navigator>
   );
 };

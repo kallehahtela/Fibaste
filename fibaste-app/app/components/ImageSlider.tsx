@@ -19,6 +19,8 @@ const ImageSlider: FC<Props> = ({ images }) => {
         setActiveIndex(info.viewableItems[0].index || 0);
     }));
 
+    if (!images?.length) return null;
+
     return (
         <View>
             <FlatList

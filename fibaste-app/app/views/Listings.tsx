@@ -6,9 +6,10 @@ import useClient from 'app/hooks/useClient';
 import { runAxiosAsync } from '@api/runAxiosAsync';
 import size from '@utils/size';
 import ProductImage from '@ui/ProductImage';
-import { Product } from './SingleProduct';
+import { getListings, Product, updateListings } from '@store/listings';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { ProfileNavigatorParamList } from '@navigator/ProfileNavigator';
+import { useDispatch, useSelector } from 'react-redux';
 
 interface Props {}
 
@@ -18,13 +19,18 @@ type ListingResponse = {
 
 const Listings: FC<Props> = (props) => {
   const { navigate } = useNavigation<NavigationProp<ProfileNavigatorParamList>>();
-  const [listings, setListings] = useState<Product[]>([]);
+  //const [listings, setListings] = useState<Product[]>([]);
+  const [fetching, setFetching] = useState(false);
   const { authClient } = useClient();
+  const dispatch = useDispatch();
+  const listings = useSelector(getListings);
 
   const fetchListings = async () =>  {
+    setFetching(true);
     const res = await runAxiosAsync<ListingResponse>(authClient.get('/product/listings'));
+    setFetching(false);
     if (res) {
-      setListings(res.products);
+      dispatch(updateListings(res.products));
     }
   };
 
@@ -36,8 +42,10 @@ const Listings: FC<Props> = (props) => {
     <>
     <AppHeader backButton={<BackButton />} />
       <View style={styles.container}>
-        <FlatList 
-        contentContainerStyle={styles.flatList}
+        <FlatList
+          refreshing={fetching}
+          onRefresh={fetchListings}
+          contentContainerStyle={styles.flatList}
           data={listings}
           keyExtractor={( item ) => item.id}
           renderItem={({ item }) => {
