@@ -1,5 +1,5 @@
-import { View, Text, StyleSheet, FlatList } from 'react-native';
-import { FC, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, ViewToken } from 'react-native';
+import { FC, useRef, useState } from 'react';
 import ProductImage from '@ui/ProductImage';
 import colors from '@utils/colors';
 
@@ -10,6 +10,14 @@ interface Props {
 const ImageSlider: FC<Props> = ({ images }) => {
 
     const [activeIndex, setActiveIndex] = useState(0);
+    const viewableConfig = useRef({itemVisiblePercentThreshold: 50})
+
+    const onViewableItemsChanged = useRef(((info: {
+        viewableItems: ViewToken<string>[];
+        changed: ViewToken<string>[];
+    }) => {
+        setActiveIndex(info.viewableItems[0].index || 0);
+    }));
 
     return (
         <View>
@@ -20,6 +28,8 @@ const ImageSlider: FC<Props> = ({ images }) => {
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 pagingEnabled
+                viewabilityConfig={viewableConfig.current}
+                onViewableItemsChanged={onViewableItemsChanged.current}
             />
 
             <View style={styles.indicator}>
