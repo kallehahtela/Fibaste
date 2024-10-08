@@ -7,6 +7,7 @@ import Listings from '@views/Listings';
 import SingleProduct from '@views/SingleProduct';
 import { Product } from '@store/listings';
 import ChatWindow from '@views/ChatWindow';
+import EditProduct from '@views/EditProduct';
 
 interface Props {}
 
@@ -16,6 +17,7 @@ export type ProfileNavigatorParamList = {
   Listings: undefined;
   SingleProduct: {product?: Product};
   ChatWindow: undefined;
+  EditProduct: {product: Product};
 };
 
 const Stack = createNativeStackNavigator<ProfileNavigatorParamList>();
@@ -28,6 +30,7 @@ const ProfileNavigator: FC<Props> = (props) => {
         <Stack.Screen name="Listings" component={Listings} />
         <Stack.Screen name="SingleProduct" component={SingleProduct} />
         <Stack.Screen name="ChatWindow" component={ChatWindow} />
+        <Stack.Screen name="EditProduct" component={EditProduct} />
       </Stack.Navigator>
   );
 };

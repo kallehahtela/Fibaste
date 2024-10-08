@@ -17,6 +17,7 @@ import mime from 'mime';
 import useClient from 'app/hooks/useClient';
 import { runAxiosAsync } from 'app/api/runAxiosAsync';
 import LoadingSpinner from '@ui/LoadingSpinner';
+import OptionSelector from './OptionSelector';
 
 interface Props {}
 
@@ -149,13 +150,10 @@ const NewListing: FC<Props> = (props) => {
           onChange={(publishingDate) => setTaskInfo({...taskInfo, publishingDate})}
         />
 
-        <Pressable 
-          style={styles.category} 
+        <OptionSelector 
+          title={category || 'Category'} 
           onPress={() => setShowCategoryModal(true)}
-        >
-          <Text style={styles.categoryTitle}>{category || 'Category' }</Text>
-          <AntDesign name='caretdown' color={colors.primary} />
-        </Pressable>
+        />
         
         <FormInput 
           value={description} 
@@ -242,20 +240,7 @@ const styles = StyleSheet.create({
       color: colors.primary, 
       padding: 10,
     },
-    category: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      width: '100%',
-      marginBottom: 15,
-      padding: 8,
-      borderWidth: 1,
-      borderColor: colors.deActive,
-      borderRadius: 5,
-    },
-    categoryTitle: {
-      color: colors.primary,
-    },
+
 });
 
 export default NewListing;
