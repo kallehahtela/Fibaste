@@ -17,7 +17,8 @@ const HorizontalImageList: FC<Props> = ({ images, onPress, onLongPress, style}) 
                 <Pressable 
                     onPress={() => onPress && onPress(item)} 
                     onLongPress={() => onLongPress && onLongPress(item)}
-                    style={styles.listItem}>
+                    style={styles.listItem}
+                >
                     <Image style={styles.image} source={{uri: item}} />
                 </Pressable>
             );
@@ -35,8 +36,8 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     listItem: {
-        width: 70,
-        height: 70,
+        width: 80,
+        height: 80,
         borderRadius: 7,
         marginLeft: 5,
         overflow: 'hidden',

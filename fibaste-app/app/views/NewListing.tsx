@@ -6,7 +6,6 @@ import colors from '@utils/colors';
 import DatePicker from '@ui/DatePicker';
 import OptionModal from '@components/OptionModal';
 import categories from '@utils/categories';
-import CategoryOption from '@ui/CategoryOption';
 import AppButton from '@ui/AppButton';
 import CustomKeyAvoidingView from '@ui/CustomKeyAvoidingView';
 import * as ImagePicker from 'expo-image-picker';
@@ -18,6 +17,7 @@ import useClient from 'app/hooks/useClient';
 import { runAxiosAsync } from 'app/api/runAxiosAsync';
 import LoadingSpinner from '@ui/LoadingSpinner';
 import OptionSelector from './OptionSelector';
+import CategoryOptions from '@components/CategoryOptions';
 
 interface Props {}
 
@@ -150,11 +150,12 @@ const NewListing: FC<Props> = (props) => {
           onChange={(publishingDate) => setTaskInfo({...taskInfo, publishingDate})}
         />
 
-        <OptionSelector 
+
+        <CategoryOptions 
+          onSelect={handleChange('category')} 
           title={category || 'Category'} 
-          onPress={() => setShowCategoryModal(true)}
         />
-        
+       
         <FormInput 
           value={description} 
           placeholder='Description' 
@@ -168,20 +169,6 @@ const NewListing: FC<Props> = (props) => {
             console.log('New task listed...');
             handleSubmit();
           }} 
-        />
-
-        <OptionModal 
-          visible={showCategoryModal}
-          onRequestClose={setShowCategoryModal}
-          options={categories}
-          renderItem={(item) => {
-            return (
-              <CategoryOption {...item} />
-            );
-          }}
-          onPress={(item) => {
-            setTaskInfo({ ...taskInfo, category: item.name});
-          }}
         />
 
         {/* Image Options */}
