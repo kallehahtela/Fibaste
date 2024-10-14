@@ -10,24 +10,24 @@ interface Props {
 
 const HorizontalImageList: FC<Props> = ({ images, onPress, onLongPress, style}) => {
     return (
-    <FlatList 
-        data={images}
-        renderItem={({ item }) => {
-            return (
-                <Pressable 
-                    onPress={() => onPress && onPress(item)} 
-                    onLongPress={() => onLongPress && onLongPress(item)}
-                    style={styles.listItem}
-                >
-                    <Image style={styles.image} source={{uri: item}} />
-                </Pressable>
-            );
-        }}
-        contentContainerStyle={style}
-        keyExtractor={(item) => item}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-    />
+        <FlatList 
+            data={images}
+            renderItem={({ item }) => {
+                return (
+                    <Pressable 
+                        onPress={() => onPress && onPress(item)} 
+                        onLongPress={() => onLongPress && onLongPress(item)}
+                        style={styles.listItem}
+                    >
+                        <Image style={styles.image} source={{ uri: item }} />
+                    </Pressable>
+                );
+            }}
+            contentContainerStyle={style}
+            keyExtractor={(item) => item}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+        />
     );
 };
 
@@ -44,4 +44,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default HorizontalImageList
+export default HorizontalImageList;

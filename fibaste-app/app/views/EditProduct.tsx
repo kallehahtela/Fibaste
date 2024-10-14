@@ -10,13 +10,17 @@ import { ProfileNavigatorParamList } from '@navigator/ProfileNavigator';
 import { FontAwesome5 } from '@expo/vector-icons';
 import FormInput from '@ui/FormInput';
 import DatePicker from '@ui/DatePicker';
-import OptionSelector from './OptionSelector';
 import OptionModal from '@components/OptionModal';
 import useClient from 'app/hooks/useClient';
 import { runAxiosAsync } from '@api/runAxiosAsync';
 import CategoryOptions from '@components/CategoryOptions';
 import { selectImages } from '@utils/helper';
 import AppButton from '@ui/AppButton';
+import { newTaskSchema, yupValidate } from '@utils/validator';
+import { showMessage } from 'react-native-flash-message';
+import mime from 'mime';
+import LoadingSpinner from '@ui/LoadingSpinner';
+import deepEqual from 'deep-equal';
 
 type Props = NativeStackScreenProps<ProfileNavigatorParamList, 'EditProduct'>;
 
@@ -45,6 +49,8 @@ const EditProduct: FC<Props> = ({ route }) => {
     const [product, setProduct] = useState({ ...productInfoToUpdate })
     const { authClient } = useClient();
 
+    const isFormChanged = deepEqual(productInfoToUpdate, product);
+
     const onLongPress = (image: string) => {
         setSelectedImage(image);
         setShowImageOptions(true);
@@ -54,13 +60,15 @@ const EditProduct: FC<Props> = ({ route }) => {
         const notLocalImage = selectedImage.startsWith('https://res.cloudinary.com');
 
         const images = product.image;
-        const newImages = images?.filter(img => img !== selectedImage);
+        const newImages = images?.filter((img) => img !== selectedImage);
         setProduct({ ...product, image: newImages });
 
         if (notLocalImage) {
             const splittedImage = selectedImage.split('/');
             const imageId = splittedImage[splittedImage.length - 1].split('.')[0];
-            await runAxiosAsync(authClient.delete(`/product/image/${product.id}/${imageId}`));
+            await runAxiosAsync(
+                authClient.delete(`/product/image/${product.id}/${imageId}`)
+            );
         }
     };
 
@@ -77,39 +85,108 @@ const EditProduct: FC<Props> = ({ route }) => {
         }
     };
 
-    const handleOnSubmit = () => {
+    const handleOnSubmit = async () => {
+        const dataToUpdate: ProductInfo = {
+            name: product.name,
+            category: product.category,
+            description: product.description,
+            price: product.price,
+            publishingDate: product.date,
+          };
+          const { error } = await yupValidate(newTaskSchema, dataToUpdate);
+          if (error) return showMessage({ message: error, type: "danger" });
+      
+          const formData = new FormData();
 
+          if (product.thumbnail) {
+            formData.append('thumbnail', product.thumbnail);
+          }
+      
+          if (product.thumbnail) {
+            formData.append("thumbnail", product.thumbnail);
+          }
+      
+          type productInfoKeys = keyof typeof dataToUpdate;
+      
+          for (let key in dataToUpdate) {
+            const value = dataToUpdate[key as productInfoKeys];
+            if (value instanceof Date) formData.append(key, value.toISOString());
+            else formData.append(key, value);
+          }
+      
+          product.image?.forEach((img, index) => {
+            if (!img.startsWith("https://res.cloudinary.com")) {
+              formData.append("images", {
+                uri: img,
+                name: "image_" + index,
+                type: mime.getType(img) || "image/jpg",
+              } as any);
+            }
+          });
+      
+          // send our new data to api
+          setBusy(true);
+          const res = await runAxiosAsync<{ message: string }>(
+            authClient.patch("/product/" + product.id, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            })
+          );
+          setBusy(false);
+          if (res) {
+            showMessage({ message: res.message, type: "success" });
+        }
     }
 
     return (
         <>
             <AppHeader backButton={<BackButton />} />
-            <View style={styles.container}>
-                <ScrollView>
-                    <Text style={styles.title}>Images</Text>
-                    <HorizontalImageList images={product.image || []} onLongPress={onLongPress}/>
-                    <Pressable style={styles.imageSelector}>
-                        <FontAwesome5 name='images' size={30} color={colors.primary} />
-                    </Pressable>
+                <View style={styles.container}>
+                    <ScrollView>
+                        <Text style={styles.title}>Images</Text>
+                        <HorizontalImageList 
+                            images={product.image || []} 
+                            onLongPress={onLongPress}
+                        />
+                        <Pressable onPress={handleOnImageSelect} style={styles.imageSelector}>
+                            <FontAwesome5 name='images' size={30} color={colors.primary} />
+                        </Pressable>
 
-                    <FormInput placeholder='Task name' value={product.name} />
-                    <FormInput placeholder='Price' keyboardType='numeric' value={product.price.toString()} />
+                        <FormInput 
+                            placeholder='Task name' 
+                            value={product.name} 
+                            onChangeText={(name) => setProduct({ ...product, name })}
+                        />
+                        <FormInput 
+                            placeholder='Price' 
+                            keyboardType='numeric' 
+                            value={product.price.toString()} 
+                            onChangeText={(price) => setProduct({ ...product, price })}
+                        />
 
-                    <DatePicker 
-                        value={new Date(product.date)} 
-                        title='Publishing Date' 
-                        onChange={() => {}}
-                    />
+                        <DatePicker 
+                            value={new Date(product.date)} 
+                            title='Publishing Date' 
+                            onChange={(date) => setProduct({ ...product, date })}
+                        />
 
-                    <CategoryOptions 
-                        onSelect={(category) => setProduct({ ...product, category })}
-                        title={product.category || 'Category'}
-                    />
+                        <CategoryOptions 
+                            onSelect={(category) => setProduct({ ...product, category })}
+                            title={product.category || 'Category'}
+                        />
 
-                    <FormInput placeholder='Description' value={product.description} />
-                    <AppButton title='Update Task' onPress={handleOnSubmit} />
-                </ScrollView>
-            </View>
+                        <FormInput 
+                            placeholder='Description' 
+                            value={product.description} 
+                            onChangeText={(description) => setProduct({ ...product, description  })}
+                        />
+                        
+                        {!isFormChanged && (
+                            <AppButton title='Update Task' onPress={handleOnSubmit} />
+                        )}
+                    </ScrollView>
+                </View>
 
             <OptionModal 
                 visible={showImageOptions}
@@ -120,16 +197,12 @@ const EditProduct: FC<Props> = ({ route }) => {
                         <Text style={styles.option}>{option.value}</Text>
                     );
                 }}
-                onPress={({id}) => {
-                    if (id === 'thumb') {
-                        makeSelectedImageAsThumbnail();
-                    }
-
-                    if (id === 'remove') {
-                        removeSelectedImage();
-                    }
+                onPress={({ id }) => {
+                    if (id === 'thumb') makeSelectedImageAsThumbnail();
+                    if (id === 'remove') removeSelectedImage();
                 }}
             />
+        <LoadingSpinner visible={busy} />
         </>
     );
 }

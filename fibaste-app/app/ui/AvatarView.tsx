@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet, Image, Pressable } from 'react-native';
 import { FC } from 'react';
 import { AntDesign } from '@expo/vector-icons';
 import colors from '@utils/colors';
@@ -6,17 +6,20 @@ import colors from '@utils/colors';
 interface Props {
     uri?: string;
     size: number;
+    onPress?(): void;
 };
 
 const iconContainerFactor = 0.7;
 const iconSizeFactor = 0.7;
 
-const AvatarView: FC<Props> = ({ uri, size = 50 }) => {
+const AvatarView: FC<Props> = ({ uri, size = 50, onPress }) => {
     const iconContainerSize = size * iconContainerFactor;
     const iconSize = size * iconSizeFactor;
 
     return (
-    <View style={[
+    <Pressable 
+        onPress={onPress}
+        style={[
         {width: size, height: size, borderRadius: size / 2}, 
         styles.container,
         !uri && styles.profileIcon,
@@ -32,7 +35,7 @@ const AvatarView: FC<Props> = ({ uri, size = 50 }) => {
         >
             <AntDesign name='user' size={iconSize} color={colors.white} />    
         </View>}
-    </View>
+    </Pressable>
     );
 };
 

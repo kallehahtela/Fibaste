@@ -130,8 +130,8 @@ And send the response back.
 
     if (isMultipleImages) {
         const oldImages = product.images?.length || 0;
-        if (oldImages + images.length > 5)
-            return sendErrorRes(res, "Image files can not be more than 5!", 422);
+        if (oldImages + images.length > 3)
+            return sendErrorRes(res, "Image files can not be more than 3!", 422);
     }
 
     let invalidFileType = false;
