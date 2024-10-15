@@ -11,7 +11,7 @@ const uploadImage = (filePath: string): Promise<UploadApiResponse> => {
     return cloudUploader.upload(filePath, {
         width: 1280,
         height: 720,
-        crops: 'fill',
+        crop: 'fill',
     });
 };
 

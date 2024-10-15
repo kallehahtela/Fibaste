@@ -47,7 +47,8 @@ const schema = new Schema<ProductDocument>({
         type: Object,
         url: String,
         id: String,
-    }],
+    },
+    ],
     thumbnail: String,
 }, { timestamps: true });
 
