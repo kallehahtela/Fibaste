@@ -163,6 +163,7 @@ export const sendProfile: RequestHandler = async (req, res) => {
 
 export const grantAccessToken: RequestHandler = async (req, res) => {
     /**
+     * // test
 1. Read and verify refresh token
 2. Find user with payload.id and refresh token
 3. If the refresh token is valid and no user found, token is compromised.

@@ -61,7 +61,7 @@ export const isAuth: RequestHandler = async (req, res, next) => {
         }
 
         if (error instanceof JsonWebTokenError) {
-            return sendErrorRes(res, "unauthorized assess!", 401);
+            return sendErrorRes(res, "Unauthorized access!", 401);
         }
 
         next(error);

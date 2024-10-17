@@ -9,7 +9,7 @@ import { getAuthState, updateAuthState } from "@store/auth";
 
 const authClient = axios.create({ baseURL });
 
-type Response = {
+export type Response = {
     tokens: {
         refresh: string;
         access: string;
