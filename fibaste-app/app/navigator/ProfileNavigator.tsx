@@ -9,16 +9,19 @@ import { Product } from '@store/listings';
 import ChatWindow from '@views/ChatWindow';
 import EditProduct from '@views/EditProduct';
 
-interface Props {}
-
 export type ProfileNavigatorParamList = {
   Profile: undefined;
   Chats: undefined;
   Listings: undefined;
   SingleProduct: { product?: Product, id?: string };
   EditProduct: { product: Product };
-  ChatWindow: undefined;
+  ChatWindow: {
+    conversationId: string;
+    peerProfile: { name: string, avatar?: string };
+  };
 };
+
+interface Props {}
 
 const Stack = createNativeStackNavigator<ProfileNavigatorParamList>();
 

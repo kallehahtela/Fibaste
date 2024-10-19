@@ -4,6 +4,6 @@ import { isAuth } from "src/middleware/auth";
 
 const conversationRouter = Router();
 
-conversationRouter.get('with/:peerId', isAuth, getOrCreateConversation)
+conversationRouter.get('/with/:peerId', isAuth, getOrCreateConversation)
 
 export default conversationRouter;

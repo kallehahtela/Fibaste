@@ -29,8 +29,8 @@ export type ProfileRes = {
     email: string;
     verified: boolean;
     avatar?: string;
-  }
-}
+  };
+};
 
 interface Props {};
 

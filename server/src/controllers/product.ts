@@ -378,7 +378,7 @@ export const getListings: RequestHandler = async (req, res) => {
             date: p.publishingDate,
             description: p.description,
             seller: {
-                id: req.user.id,
+                id: req.user._id,
                 name: req.user.name,
                 avatar: req.user.avatar,
             },

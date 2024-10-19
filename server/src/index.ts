@@ -10,6 +10,7 @@ import { Server } from 'socket.io';
 import { TokenExpiredError, verify } from 'jsonwebtoken';
 import morgan from 'morgan';
 import conversationRouter from './routes/conversation';
+import ConversationModel from './models/conversation';
 
 const app = express();
 const server = http.createServer(app);
@@ -46,9 +47,64 @@ io.use((socket, next) => {
 
     next();
 });
+
+type MessageProfile = {
+    id: string;
+    name: string;
+    avatar?: string;
+};
+
+type IncomingMessage = {
+    message: {
+        id: string;
+        time: string;
+        text: string;
+        user: MessageProfile;
+    },
+    to: string;
+    conversationId: string;
+};
+
+type OutgoingMessageResponse = {
+    message: {
+        id: string;
+        time: string;
+        text: string;
+        user: MessageProfile;
+    };
+    from: MessageProfile;
+    conversationId: string;
+};
+
 io.on('connection', (socket) => {
+    const socketData = socket.data as { jwtDecode: { id: string } };
+    const userId = socketData.jwtDecode.id;
+
+    socket.join(userId);
+
     console.log(socket.data);
-    console.log('user is connected');
+    //console.log('user is connected');
+    socket.on('chat:new', async (data: IncomingMessage) => {
+        const { conversationId, message, to } = data;
+
+        await ConversationModel.findByIdAndUpdate(conversationId, {
+            $push: {
+                chats: {
+                    sentBy: message.user.id,
+                    content: message.text,
+                    timestamp: message.time,
+                }
+            }
+        })
+
+        const messageResponse: OutgoingMessageResponse = {
+            from: message.user,
+            conversationId,
+            message: message
+        }
+
+        socket.to(to).emit('chat:message', messageResponse);
+    });
 });
 
 // Error handling middleware

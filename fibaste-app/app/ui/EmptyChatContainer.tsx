@@ -1,0 +1,38 @@
+import { View, Text, StyleSheet } from 'react-native';
+import { FC } from 'react';
+import size from '@utils/size';
+import colors from '@utils/colors';
+
+interface Props {};
+
+const EmptyChatContainer: FC<Props> = (props) => {
+    return (
+        <View style={styles.container}>
+            <View style={styles.titleContainer}>
+                <Text style={styles.message}>Breaking the ice can be the hardest part, but trust me, it's worth it! Start with a simple 'hello' and watch the conversation unfold.</Text>
+            </View>
+        </View>
+    );
+}
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: size.padding,
+        transform: [{ rotate: '180deg'}, {rotateY: '-180deg'}],
+    },
+    titleContainer: {
+        backgroundColor: colors.deActive,
+        padding: size.padding,
+        borderRadius: 5,
+    },
+    message: {
+        color: colors.active,
+        fontSize: 12,
+        textAlign: 'center',
+    },
+});
+
+export default EmptyChatContainer

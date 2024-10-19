@@ -1,5 +1,4 @@
 import { Document, model, ObjectId, Schema } from "mongoose";
-import { ref } from "yup";
 
 interface Chat {
     _id: ObjectId,
@@ -10,41 +9,42 @@ interface Chat {
 }
 
 interface ConversationDocument extends Document {
-    participants: ObjectId[],
+    participants: ObjectId[];
     participantsId: string;
     chats: Chat[];
 };
 
-const schema = new Schema<ConversationDocument>({
-    participants: [
-        {
-            type: Schema.Types.ObjectId,
-            ref: 'User',
-            required: true,
+const schema = new Schema<ConversationDocument>(
+    {
+        participants: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: 'User',
+                required: true,
+            },
+        ],
+        participantsId: { type: String, unique: true, required: true },
+        chats: [{
+            sendBy: {
+                type: Schema.Types.ObjectId,
+                ref: 'User',
+                required: true,
+            },
+            content: {
+                type: String,
+                required: true,
+            },
+            timestamp: {
+                type: Date,
+                default: Date.now,
+            },
+            viewed: {
+                type: Boolean,
+                default: false,
+            },
         },
-    ],
-    participantsId: { type: String, unique: true, required: true },
-    chats: [{
-        sendBy: {
-            type: Schema.Types.ObjectId,
-            ref: 'User',
-            required: true,
-        },
-        content: {
-            type: String,
-            required: true,
-        },
-        timestamp: {
-            type: Date,
-            default: Date.now,
-        },
-        viewed: {
-            type: Boolean,
-            default: false,
-        },
-    },
-    ],
-}, { timestamps: true });
+        ],
+    }, { timestamps: true });
 
 const ConversationModel = model('Conversation', schema);
 

@@ -12,6 +12,10 @@ export const handleSocketConnection = (profile: Profile, dispatch: Dispatch<Unkn
     socket.auth = { token: profile?.accessToken }
     socket.connect();
 
+    socket.on('chat:message', (data) => {
+        console.log(data);
+    });
+
     socket.on("connect_error", async (error) => {
         if (error.message === 'jwt expired!') {
             const refreshToken = await asyncStorage.get(Keys.REFRESH_TOKEN);
