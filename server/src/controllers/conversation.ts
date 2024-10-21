@@ -114,13 +114,6 @@ export const getConversation: RequestHandler = async (req, res) => {
     res.json({ conversation: finalConversation });
 };
 
-type LastChat = {
-    id: string,
-    lastMessage: string,
-    timestamp: Date,
-    unreadChatCounts: number,
-    peerProfile: UserProfile,
-};
 
 export const getLastChats: RequestHandler = async (req, res) => {
 
@@ -191,5 +184,5 @@ export const getLastChats: RequestHandler = async (req, res) => {
 
     console.log(JSON.stringify(chats, null, 2));
 
-    res.json({});
+    res.json({ chats });
 };

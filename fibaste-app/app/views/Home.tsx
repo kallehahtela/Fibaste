@@ -12,6 +12,7 @@ import { runAxiosAsync } from '@api/runAxiosAsync';
 import socket, { handleSocketConnection } from 'app/socket';
 import useAuth from 'app/hooks/useAuth';
 import { useDispatch } from 'react-redux';
+import { ActiveChat, addNewActiveChats } from '@store/chats';
 
 interface Props {}
 
@@ -21,6 +22,16 @@ const Home = () => {
   const { authClient } = useClient();
   const { authState } = useAuth();
   const dispatch = useDispatch();
+
+  const fetchLastChats = async () => {
+    const res = await runAxiosAsync<{
+      chats: ActiveChat[]
+  }>(authClient('/conversation/last-chats'));
+
+  if (res) {
+    dispatch(addNewActiveChats(res.chats));
+  }
+  };
 
   const fetchLatestProduct = async () => {
     const res = await runAxiosAsync<{ products: LatestProduct[] }>(
@@ -33,6 +44,7 @@ const Home = () => {
 
   useEffect(() => {
     fetchLatestProduct();
+    fetchLastChats();
   }, []);
 
   useEffect(() => {

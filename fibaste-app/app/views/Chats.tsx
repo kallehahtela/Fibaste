@@ -1,22 +1,22 @@
-import { View, Text } from 'react-native'
+import { View, Text, FlatList, StyleSheet, Pressable } from 'react-native'
 import React, { useEffect } from 'react'
 import AppHeader from '@components/AppHeader'
 import BackButton from '@ui/BackButton'
 import EmptyView from '@ui/EmptyView'
 import useClient from 'app/hooks/useClient'
 import { runAxiosAsync } from '@api/runAxiosAsync'
+import { useSelector } from 'react-redux'
+import { ActiveChat, getActiveChats } from '@store/chats'
+import RecentChat, { Separator } from '@components/RecentChat'
+import size from '@utils/size'
 
 const Chats = () => {
   const { authClient } = useClient();
-  const chats = [];
+  const chats = useSelector(getActiveChats);
 
-  const fetchLastChats = async () => {
-    await runAxiosAsync(authClient('/conversation/last-chats'))
+  const onChatPress = (chat: ActiveChat) => {
+    console.log(chat);
   };
-
-  useEffect(() => {
-    fetchLastChats();
-  }, []);
 
   if (!chats.length) {
     return (
@@ -28,10 +28,32 @@ const Chats = () => {
   }
 
   return (
-    <View>
+    <>
       <AppHeader backButton={<BackButton />} />
-    </View>
-  )
+      <FlatList 
+        data={chats}
+        contentContainerStyle={styles.container}
+        renderItem={({item}) => (
+          <Pressable onPress={() => onChatPress(item)}>
+            <RecentChat 
+              name={item.peerProfile.name} 
+              avatar={item.peerProfile.avatar} 
+              timestamp={item.timestamp}
+              lastMessage={item.lastMessage}
+              unreadMessageCount={item.unreadChatCounts}
+            />
+          </Pressable>
+        )}
+        ItemSeparatorComponent={() => <Separator />}
+      />
+    </>
+  );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: size.padding,
+  }
+});
 
 export default Chats
