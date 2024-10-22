@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet } from 'react-native';
-import { FC, useEffect } from 'react';
+import { FC, useEffect, useState } from 'react';
 import AppHeader from '@components/AppHeader';
 import BackButton from '@ui/BackButton';
 import { AppStackParamList } from '@navigator/AppNavigator';
@@ -13,6 +13,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { addConversation, Conversation, selectConversationById, updateConversation } from '@store/conversation';
 import { runAxiosAsync } from '@api/runAxiosAsync';
 import useClient from 'app/hooks/useClient';
+import EmptyView from '@ui/EmptyView';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'ChatWindow'>;
 
@@ -42,6 +43,7 @@ const formatConversationToImessage = (value?: Conversation): IMessage[] => {
             _id: chat.id,
             text: chat.text,
             createdAt: new Date(chat.time),
+            received: chat.viewed,
             user: {
                 _id: chat.user.id,
                 name: chat.user.name,
@@ -58,9 +60,10 @@ const formatConversationToImessage = (value?: Conversation): IMessage[] => {
 const ChatWindow: FC<Props> = ({ route }) => {
     const { authState } = useAuth();
     const { conversationId, peerProfile } = route.params;
-    const chats = useSelector(selectConversationById(conversationId));
+    const conversation = useSelector(selectConversationById(conversationId));
     const dispatch = useDispatch();
     const { authClient } = useClient();
+    const [fetchingChats, setFetchingChats] = useState(false);
 
     const profile = authState.profile;
 
@@ -84,7 +87,7 @@ const ChatWindow: FC<Props> = ({ route }) => {
         dispatch(
             updateConversation({
                 conversationId, 
-                chat: newMessage.message, 
+                chat: {...newMessage.message, viewed: false}, 
                 peerProfile,
             })
         );
@@ -94,18 +97,32 @@ const ChatWindow: FC<Props> = ({ route }) => {
     };
 
     const fetchOldChats = async () => {
+        setFetchingChats(true);
         const res = await runAxiosAsync<{conversation: Conversation}>(authClient('/conversation/chats/'+ conversationId));
 
+        setFetchingChats(false);
         if (res?.conversation) {
             dispatch(addConversation([res.conversation]))
         } 
     };
 
+    const sendSeenRequest = () => {
+        runAxiosAsync(authClient.patch(`'/conversation/seen/${conversationId}/${peerProfile.id}`));
+    };
+
     useEffect(() => {
-        fetchOldChats();
+        const handleApiRequest = async () => {
+            await fetchOldChats();
+            // we want to update viewed property inside our database
+            await sendSeenRequest();
+        }
+
+        handleApiRequest();
     }, []);
 
     if (!profile) return null;
+
+    if (fetchingChats) return <EmptyView title='Please wait...' />
 
     return (
         <View style={styles.container}>

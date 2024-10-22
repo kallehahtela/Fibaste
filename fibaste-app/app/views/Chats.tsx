@@ -5,17 +5,27 @@ import BackButton from '@ui/BackButton'
 import EmptyView from '@ui/EmptyView'
 import useClient from 'app/hooks/useClient'
 import { runAxiosAsync } from '@api/runAxiosAsync'
-import { useSelector } from 'react-redux'
-import { ActiveChat, getActiveChats } from '@store/chats'
+import { useDispatch, useSelector } from 'react-redux'
+import { ActiveChat, getActiveChats, removeUnreadChatCount } from '@store/chats'
 import RecentChat, { Separator } from '@components/RecentChat'
 import size from '@utils/size'
+import { NavigationProp, useNavigation } from '@react-navigation/native'
+import { ProfileNavigatorParamList } from '@navigator/ProfileNavigator'
 
 const Chats = () => {
   const { authClient } = useClient();
   const chats = useSelector(getActiveChats);
+  const dispatch = useDispatch();
+  const { navigate } = useNavigation<NavigationProp<ProfileNavigatorParamList>>();
 
-  const onChatPress = (chat: ActiveChat) => {
-    console.log(chat);
+  
+
+  const onChatPress = async (chat: ActiveChat) => {
+    // first we want to remove the unread chat counts
+    dispatch(removeUnreadChatCount(chat.id));
+
+    // third we want to navigate our users to chat screen
+    navigate('ChatWindow', { conversationId: chat.id, peerProfile: chat.peerProfile });
   };
 
   if (!chats.length) {

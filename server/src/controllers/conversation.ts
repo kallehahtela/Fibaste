@@ -8,7 +8,7 @@ interface UserProfile {
     id: string;
     name: string;
     avatar?: string;
-}
+};
 
 interface Chat {
     text: string;
@@ -16,26 +16,27 @@ interface Chat {
     id: string;
     viewed: boolean;
     user: UserProfile;
-}
+};
 
 interface Conversation {
     id: string;
     chats: Chat[];
     peerProfile: { avatar?: string; name: string; id: string };
-}
+};
 
 type PopulatedChat = {
-    _id: ObjectId,
-    content: string,
-    timestamp: Date,
-    sentBy: { name: string, _id: ObjectId, avatar?: { url: string } }
-}
+    _id: ObjectId;
+    content: string;
+    timestamp: Date;
+    viewed: boolean;
+    sentBy: { name: string, _id: ObjectId, avatar?: { url: string } };
+};
 
 type PopulatedParticipant = {
-    _id: ObjectId,
-    name: string,
-    avatar?: { url: string },
-}
+    _id: ObjectId;
+    name: string;
+    avatar?: { url: string };
+};
 
 export const getOrCreateConversation: RequestHandler = async (req, res) => {
     const { peerId } = req.params;
@@ -86,7 +87,7 @@ export const getConversation: RequestHandler = async (req, res) => {
             path: 'participants',
             match: { _id: { $ne: req.user.id } }, // Filter out the logged in user
             select: 'name avatar.url',
-        }).select('sentBy chats._id chats.content chats.timestamps participants');
+        }).select('sentBy chats._id chats.content chats.timestamps chats.viewed participants');
 
     if (!conversation) return sendErrorRes(res, 'Details not found', 404);
 
@@ -98,6 +99,7 @@ export const getConversation: RequestHandler = async (req, res) => {
             id: c._id.toString(),
             text: c.content,
             time: c.timestamp.toISOString(),
+            viewed: c.viewed,
             user: {
                 id: c.sentBy._id.toString(),
                 name: c.sentBy.name,
@@ -186,4 +188,24 @@ export const getLastChats: RequestHandler = async (req, res) => {
     console.log(JSON.stringify(chats, null, 2));
 
     res.json({ chats });
+};
+
+export const updateChatSeenStatus: RequestHandler = async (req, res) => {
+    const { peerId, conversationId } = req.params;
+
+    if (!isValidObjectId(peerId) || !isValidObjectId(conversationId))
+        return sendErrorRes(res, 'Invalid coversation or peer id', 422);
+
+    await ConversationModel.findByIdAndUpdate(conversationId,
+        {
+            $set: {
+                'chats.$[elem.viewed': true,
+            },
+        },
+        {
+            arrayFilters: [{ 'elem.sentBy': peerId }],
+        },
+    );
+
+    res.json({ message: 'Updated successfully' });
 };

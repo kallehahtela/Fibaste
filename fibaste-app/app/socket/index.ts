@@ -21,6 +21,7 @@ type newMessageResponse = {
         time: string;
         text: string;
         user: MessageProfile;
+        viewed: boolean;
     };
     from: MessageProfile;
     conversationId: string;

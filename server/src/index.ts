@@ -82,7 +82,6 @@ io.on('connection', (socket) => {
 
     socket.join(userId);
 
-    console.log(socket.data);
     //console.log('user is connected');
     socket.on('chat:new', async (data: IncomingMessage) => {
         const { conversationId, message, to } = data;
@@ -100,7 +99,7 @@ io.on('connection', (socket) => {
         const messageResponse: OutgoingMessageResponse = {
             from: message.user,
             conversationId,
-            message: message
+            message: { ...message, viewed: false },
         }
 
         socket.to(to).emit('chat:message', messageResponse);

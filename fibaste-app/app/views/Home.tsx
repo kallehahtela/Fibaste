@@ -11,8 +11,8 @@ import useClient from 'app/hooks/useClient';
 import { runAxiosAsync } from '@api/runAxiosAsync';
 import socket, { handleSocketConnection } from 'app/socket';
 import useAuth from 'app/hooks/useAuth';
-import { useDispatch } from 'react-redux';
-import { ActiveChat, addNewActiveChats } from '@store/chats';
+import { useDispatch, useSelector } from 'react-redux';
+import { ActiveChat, addNewActiveChats, getUnreadChatsCount } from '@store/chats';
 
 interface Props {}
 
@@ -22,6 +22,7 @@ const Home = () => {
   const { authClient } = useClient();
   const { authState } = useAuth();
   const dispatch = useDispatch();
+  const totalUnreadMessages = useSelector(getUnreadChatsCount);
 
   const fetchLastChats = async () => {
     const res = await runAxiosAsync<{
@@ -43,8 +44,13 @@ const Home = () => {
   };
 
   useEffect(() => {
-    fetchLatestProduct();
-    fetchLastChats();
+
+    const handleApiRequest = async () => {
+      await fetchLatestProduct();
+      await fetchLastChats();
+    }
+
+    handleApiRequest();
   }, []);
 
   useEffect(() => {
@@ -58,7 +64,10 @@ const Home = () => {
 
   return (
     <>
-      <ChatNotification onPress={() => navigate('Chats')} />
+      <ChatNotification 
+        onPress={() => navigate('Chats')} 
+        indicate={totalUnreadMessages > 0}
+      />
       <ScrollView style={styles.container}>
         <SearchBar />
         <CategoryList 

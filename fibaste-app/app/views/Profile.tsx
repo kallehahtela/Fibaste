@@ -12,12 +12,13 @@ import { AntDesign } from '@expo/vector-icons';
 import { runAxiosAsync } from '@api/runAxiosAsync';
 import useClient from 'app/hooks/useClient';
 import { ProfileRes } from '@navigator/index';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { updateAuthState } from '@store/auth';
 import { showMessage } from 'react-native-flash-message';
 import { selectImages } from '@utils/helper';
 import mime from 'mime';
 import LoadingSpinner from '@ui/LoadingSpinner';
+import { getUnreadChatsCount } from '@store/chats';
 
 interface Props {}
 
@@ -30,6 +31,7 @@ const Profile: FC<Props> = (props) => {
   const [updatingAvatar, setUpdatingAvatar] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const dispatch = useDispatch();
+  const totalUnreadMessages = useSelector(getUnreadChatsCount);
 
   const isNameChanged = profile?.name !== userName && userName.trim().length >= 3;
   const { authClient } = useClient();
@@ -150,6 +152,7 @@ const Profile: FC<Props> = (props) => {
         style={styles.marginBottom} 
         antIconName='message1' title='Messages'
         onPress={onMessagePress}
+        active={totalUnreadMessages > 0}
       />
       <ProfileOptionListItem 
         style={styles.marginBottom} 
