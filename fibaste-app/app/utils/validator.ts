@@ -1,11 +1,11 @@
-import * as yup from 'yup';
+import * as yup from "yup";
 
-type ValidationResult<T> = { error?: string, values?: T }
+type ValidationResult<T> = { error?: string; values?: T };
 
-export const yupValidate = async <T extends object>
-    (schema: yup.Schema,
-        value: T
-    ): Promise<ValidationResult<T>> => {
+export const yupValidate = async <T extends object>(
+    schema: yup.Schema,
+    value: T
+): Promise<ValidationResult<T>> => {
     try {
         const data = await schema.validate(value);
         return { values: data };
@@ -21,43 +21,43 @@ export const yupValidate = async <T extends object>
 export const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
 const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/
 
-yup.addMethod(yup.string, 'email', function validateEmail(message) {
+yup.addMethod(yup.string, "email", function validateEmail(message) {
     return this.matches(emailRegex, {
         message,
-        name: 'email',
+        name: "email",
         excludeEmptyString: true,
     });
 });
 
-const emailAndPasswordValidation = {
-    email: yup.string().email('Invalid email!').required('Email is missing!'),
+const nameAndEmailValidation = {
+    email: yup.string().email("Invalid email!").required("Email is missing"),
     password: yup
         .string()
-        .required('Password is missing!')
-        .min(8, 'Password should be atleast 8 characters')
-        .matches(passwordRegex, 'Password should have atleast one capital letter, one number and one special letter!'),
+        .required("Password is missing")
+        .min(8, "Password should be at least 8 chars long!")
+        .matches(passwordRegex, "Password is too simple."),
 };
 
 export const newUserSchema = yup.object({
-    name: yup.string().required('Name is missing!'),
-    ...emailAndPasswordValidation
+    name: yup.string().required("Name is missing"),
+    ...nameAndEmailValidation,
 });
 
 export const signInSchema = yup.object({
-    ...emailAndPasswordValidation
+    ...nameAndEmailValidation,
 });
 
-export const newTaskSchema = yup.object({
-    name: yup.string().required('Task name is missing!'),
-    description: yup.string().required('Task description is missing!'),
-    category: yup.string().required('Task category is missing!'),
+export const newProductSchema = yup.object({
+    name: yup.string().required("Product name is missing!"),
+    description: yup.string().required("Product description is missing!"),
+    category: yup.string().required("Product category is missing!"),
     price: yup
         .string()
         .transform((value) => {
-            if (isNaN(+value)) return '';
+            if (isNaN(+value)) return "";
 
             return value;
         })
-        .required('Task price is missing!'),
-    publishingDate: yup.date().required('Task publishing date is missing!'),
+        .required("Product price is missing!"),
+    purchasingDate: yup.date().required("Purchasing date is missing!"),
 });

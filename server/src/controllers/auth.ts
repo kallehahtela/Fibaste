@@ -1,18 +1,18 @@
 import { RequestHandler } from "express";
 import UserModel from "src/models/user";
-import crypto from 'crypto';
-import nodemailer from 'nodemailer';
+import crypto from "crypto";
+import nodemailer from "nodemailer";
 import AuthVerificationTokenModel from "src/models/authVerificationToken";
 import { sendErrorRes } from "src/utils/helper";
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 import mail from "src/utils/mail";
 import PasswordResetTokenModel from "src/models/passwordResetToken";
 import { isValidObjectId } from "mongoose";
-import cloudUploader from 'src/cloud/index';
+import cloudUploader from "src/cloud";
 
 const VERIFICATION_LINK = process.env.VERIFICATION_LINK;
-const JWT_SECRET = process.env.JWT_SECRET!
-const PASSWORD_RESET_LINK = process.env.PASSWORD_RESET_LINK;
+const JWT_SECRET = process.env.JWT_SECRET!;
+const PASSWORD_RESET_LINK = process.env.PASSWORD_RESET_LINK!;
 
 export const createNewUser: RequestHandler = async (req, res) => {
     // Read incoming data like: name, email, password
@@ -66,14 +66,14 @@ export const createNewUser: RequestHandler = async (req, res) => {
 
 export const verifyEmail: RequestHandler = async (req, res) => {
     /**
-1. Read incoming data like: id and token
-2. Find the token inside DB (using owner id).
-3. Send error if token not found.
-4. Check if the token is valid or not (because we have the encrypted value).
-5. If not valid send error otherwise update user is verified.
-6. Remove token from database.
-7. Send success message.
-   **/
+  1. Read incoming data like: id and token
+  2. Find the token inside DB (using owner id).
+  3. Send error if token not found.
+  4. Check if the token is valid or not (because we have the encrypted value).
+  5. If not valid send error otherwise update user is verified.
+  6. Remove token from database.
+  7. Send success message.
+     **/
     const { id, token } = req.body;
 
     const authToken = await AuthVerificationTokenModel.findOne({ owner: id });
@@ -87,17 +87,17 @@ export const verifyEmail: RequestHandler = async (req, res) => {
 
     await AuthVerificationTokenModel.findByIdAndDelete(authToken._id);
 
-    res.json({ message: "Thanks for joining us at Fibaste, your email is verified." });
+    res.json({ message: "Thanks for joining us, your email is verified." });
 };
 
 export const generateVerificationLink: RequestHandler = async (req, res) => {
     /**
-1. check if user is authenticated or not
-2. remove previous token if any
-3. create/store new token and 
-4. send link inside users email
-5. send response back
- **/
+  1. check if user is authenticated or not
+  2. remove previous token if any
+  3. create/store new token and 
+  4. send link inside users email
+  5. send response back
+     **/
     const { id } = req.user;
     const token = crypto.randomBytes(36).toString("hex");
 
@@ -114,14 +114,14 @@ export const generateVerificationLink: RequestHandler = async (req, res) => {
 
 export const signIn: RequestHandler = async (req, res) => {
     /**
-1. Read incoming data like: email and password
-2. Find user with the provided email.
-3. Send error if user not found.
-4. Check if the password is valid or not (because pass is in encrypted form).
-5. If not valid send error otherwise generate access & refresh token.
-6. Store refresh token inside DB.
-7. Send both tokens to user.
-    **/
+  1. Read incoming data like: email and password
+  2. Find user with the provided email.
+  3. Send error if user not found.
+  4. Check if the password is valid or not (because pass is in encrypted form).
+  5. If not valid send error otherwise generate access & refresh token.
+  6. Store refresh token inside DB.
+  7. Send both tokens to user.
+      **/
 
     const { email, password } = req.body;
 
@@ -163,14 +163,13 @@ export const sendProfile: RequestHandler = async (req, res) => {
 
 export const grantAccessToken: RequestHandler = async (req, res) => {
     /**
-     * // test
-1. Read and verify refresh token
-2. Find user with payload.id and refresh token
-3. If the refresh token is valid and no user found, token is compromised.
-4. Remove all the previous tokens and send error response.
-5. If the the token is valid and user found create new refresh and access token.
-6. Remove previous token, update user and send new tokens.  
- **/
+  1. Read and verify refresh token
+  2. Find user with payload.id and refresh token
+  3. If the refresh token is valid and no user found, token is compromised.
+  4. Remove all the previous tokens and send error response.
+  5. If the the token is valid and user found create new refresh and access token.
+  6. Remove previous token, update user and send new tokens.  
+    **/
 
     const { refreshToken } = req.body;
 
@@ -215,8 +214,8 @@ export const grantAccessToken: RequestHandler = async (req, res) => {
 
 export const signOut: RequestHandler = async (req, res) => {
     /**
-      Remove the refresh token
-   **/
+       Remove the refresh token
+    **/
 
     const { refreshToken } = req.body;
     const user = await UserModel.findOne({
@@ -234,29 +233,34 @@ export const signOut: RequestHandler = async (req, res) => {
 };
 
 export const generateForgetPassLink: RequestHandler = async (req, res) => {
-    // Ask for users email.
-    const { email } = req.body;
+    /**
+  1. Ask for users email
+  2. Find user with the given email.
+  3. Send error if there is no user.
+  4. Else generate password reset token (first remove if there is any).
+  5. Generate reset link (like we did for verification)
+  6. Send link inside user's email.
+  7. Send response back.
+    **/
 
-    // Find user with the given email.
+    const { email } = req.body;
     const user = await UserModel.findOne({ email });
 
-    // Send error if there is no user.
-    if (!user) return sendErrorRes(res, 'Account not found!', 404);
+    if (!user) return sendErrorRes(res, "Account not found!", 404);
 
-    // Else generate password reset token (first remove if there is any).
-    // Reset Token
+    // Remove token
     await PasswordResetTokenModel.findOneAndDelete({ owner: user._id });
 
     // Create new token
-    const token = crypto.randomBytes(36).toString('hex');
+    const token = crypto.randomBytes(36).toString("hex");
     await PasswordResetTokenModel.create({ owner: user._id, token });
 
-    // Send the link to user's email
+    // send the link to user's email
     const passResetLink = `${PASSWORD_RESET_LINK}?id=${user._id}&token=${token}`;
     await mail.sendPasswordResetLink(user.email, passResetLink);
 
-    // Send response back
-    res.json({ message: 'Please check your email!' });
+    // send response back
+    res.json({ message: "Please check your email." });
 };
 
 export const grantValid: RequestHandler = async (req, res) => {
@@ -265,16 +269,16 @@ export const grantValid: RequestHandler = async (req, res) => {
 
 export const updatePassword: RequestHandler = async (req, res) => {
     /**
-1. Read user id, reset pass token and password.
-2. Validate all these things.
-3. If valid find user with the given id.
-4. Check if user is using same password.
-5. If there is no user or user is using the same password send error res.
-6. Else update new password.
-7. Remove password reset token.
-8. Send confirmation email.
-9. Send response back. 
- **/
+  1. Read user id, reset pass token and password.
+  2. Validate all these things.
+  3. If valid find user with the given id.
+  4. Check if user is using same password.
+  5. If there is no user or user is using the same password send error res.
+  6. Else update new password.
+  7. Remove password reset token.
+  8. Send confirmation email.
+  9. Send response back. 
+    **/
 
     const { id, password } = req.body;
 
@@ -296,11 +300,11 @@ export const updatePassword: RequestHandler = async (req, res) => {
 
 export const updateProfile: RequestHandler = async (req, res) => {
     /**
-1. User must be logged in (authenticated).
-2. Name must be valid.
-3. Find user and update the name.
-4. Send new profile back.
-  **/
+  1. User must be logged in (authenticated).
+  2. Name must be valid.
+  3. Find user and update the name.
+  4. Send new profile back.
+    **/
 
     const { name } = req.body;
 
@@ -315,14 +319,14 @@ export const updateProfile: RequestHandler = async (req, res) => {
 
 export const updateAvatar: RequestHandler = async (req, res) => {
     /**
-1. User must be logged in.
-2. Read incoming file.
-3. File type must be image.
-4. Check if user already have avatar or not.
-5. If yes the remove the old avatar.
-6. Upload new avatar and update user.
-7. Send response back.
-  **/
+  1. User must be logged in.
+  2. Read incoming file.
+  3. File type must be image.
+  4. Check if user already have avatar or not.
+  5. If yes the remove the old avatar.
+  6. Upload new avatar and update user.
+  7. Send response back.
+    **/
 
     const { avatar } = req.files;
     if (Array.isArray(avatar)) {

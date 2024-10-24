@@ -36,16 +36,41 @@ const initialState: InitialState = {
 };
 
 const slice = createSlice({
-    name: 'conversation',
+    name: "conversation",
     initialState,
     reducers: {
-        addConversation(state, { payload }: PayloadAction<InitialState['conversations']>) {
+        addConversation(
+            state,
+            { payload }: PayloadAction<InitialState["conversations"]>
+        ) {
             state.conversations = payload;
         },
-        updateConversation({ conversations }, { payload }: PayloadAction<UpdatePayload>) {
-            const index = conversations.findIndex(({ id }) => id === payload.conversationId);
+        updateChatViewed(
+            state,
+            { payload }: PayloadAction<{ messageId: string; conversationId: string }>
+        ) {
+            const index = state.conversations.findIndex(
+                ({ id }) => id === payload.conversationId
+            );
+
+            if (index !== -1) {
+                state.conversations[index].chats.map((chat) => {
+                    if (chat.id === payload.messageId) {
+                        chat.viewed = true;
+                    }
+                    return chat;
+                });
+            }
+        },
+        updateConversation(
+            { conversations },
+            { payload }: PayloadAction<UpdatePayload>
+        ) {
+            const index = conversations.findIndex(
+                ({ id }) => id === payload.conversationId
+            );
             if (index === -1) {
-                // we have to create new conversation because there is no conversation with this id.
+                // we have to create new conversation because there is no conversation with this id
                 conversations.push({
                     id: payload.conversationId,
                     chats: [payload.chat],
@@ -58,12 +83,16 @@ const slice = createSlice({
     },
 });
 
-export const { addConversation, updateConversation } = slice.actions;
+export const { addConversation, updateChatViewed, updateConversation } =
+    slice.actions;
 
 export const selectConversationById = (conversationId: string) => {
-    return createSelector((state: RootState) => state, ({ conversation }) => {
-        return conversation.conversations.find(({ id }) => id === conversationId);
-    });
+    return createSelector(
+        (state: RootState) => state,
+        ({ conversation }) => {
+            return conversation.conversations.find(({ id }) => id === conversationId);
+        }
+    );
 };
 
 export default slice.reducer;

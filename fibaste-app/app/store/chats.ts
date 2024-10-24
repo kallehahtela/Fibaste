@@ -6,28 +6,42 @@ export interface ActiveChat {
     lastMessage: string;
     timestamp: string;
     unreadChatCounts: number;
-    peerProfile: { id: string, name: string, avatar?: string };
-};
+    peerProfile: { id: string; name: string; avatar?: string };
+}
 
 const initialState: ActiveChat[] = [];
 
 const slice = createSlice({
-    name: 'chats',
+    name: "chats",
     initialState,
     reducers: {
         addNewActiveChats(state, { payload }: PayloadAction<ActiveChat[]>) {
             return payload;
         },
         removeUnreadChatCount(chats, { payload }: PayloadAction<string>) {
-            const index = chats.findIndex(chat => chat.id === payload);
+            const index = chats.findIndex((chat) => chat.id === payload);
             if (index !== -1) {
                 chats[index].unreadChatCounts = 0;
+            }
+        },
+        updateActiveChat(chats, { payload }: PayloadAction<ActiveChat>) {
+            const index = chats.findIndex((chat) => chat.id === payload.id);
+            if (index === -1) {
+                // this is new chat
+                chats.push(payload);
+            } else {
+                const chat = chats[index];
+                chat.lastMessage = payload.lastMessage;
+                chat.timestamp = payload.timestamp;
+                chat.unreadChatCounts =
+                    chat.unreadChatCounts + payload.unreadChatCounts;
             }
         },
     },
 });
 
-export const { addNewActiveChats, removeUnreadChatCount } = slice.actions;
+export const { addNewActiveChats, updateActiveChat, removeUnreadChatCount } =
+    slice.actions;
 
 export const getActiveChats = createSelector(
     (state: RootState) => state,

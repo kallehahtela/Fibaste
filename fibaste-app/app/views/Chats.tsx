@@ -1,53 +1,60 @@
-import { View, Text, FlatList, StyleSheet, Pressable } from 'react-native'
-import React, { useEffect } from 'react'
-import AppHeader from '@components/AppHeader'
-import BackButton from '@ui/BackButton'
-import EmptyView from '@ui/EmptyView'
-import useClient from 'app/hooks/useClient'
-import { runAxiosAsync } from '@api/runAxiosAsync'
-import { useDispatch, useSelector } from 'react-redux'
-import { ActiveChat, getActiveChats, removeUnreadChatCount } from '@store/chats'
-import RecentChat, { Separator } from '@components/RecentChat'
-import size from '@utils/size'
-import { NavigationProp, useNavigation } from '@react-navigation/native'
-import { ProfileNavigatorParamList } from '@navigator/ProfileNavigator'
+import AppHeader from "@components/AppHeader";
+import RecentChat, { Separator } from "@components/RecentChat";
+import { NavigationProp, useNavigation } from "@react-navigation/native";
+import BackButton from "@ui/BackButton";
+import EmptyView from "@ui/EmptyView";
+import size from "@utils/size";
+import { runAxiosAsync } from "app/api/runAxiosAsync";
+import useClient from "app/hooks/useClient";
+import { ProfileNavigatorParamList } from "app/navigator/ProfileNavigator";
+import {
+  ActiveChat,
+  getActiveChats,
+  removeUnreadChatCount,
+} from "app/store/chats";
+import { FC, useEffect } from "react";
+import { View, StyleSheet, FlatList, Text, Pressable } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
 
-const Chats = () => {
+interface Props {}
+
+const Chats: FC<Props> = (props) => {
   const { authClient } = useClient();
+  const { navigate } =
+    useNavigation<NavigationProp<ProfileNavigatorParamList>>();
   const chats = useSelector(getActiveChats);
   const dispatch = useDispatch();
-  const { navigate } = useNavigation<NavigationProp<ProfileNavigatorParamList>>();
 
-  
-
-  const onChatPress = async (chat: ActiveChat) => {
+  const onChatPress = (chat: ActiveChat) => {
     // first we want to remove the unread chat counts
     dispatch(removeUnreadChatCount(chat.id));
 
     // third we want to navigate our users to chat screen
-    navigate('ChatWindow', { conversationId: chat.id, peerProfile: chat.peerProfile });
+    navigate("ChatWindow", {
+      conversationId: chat.id,
+      peerProfile: chat.peerProfile,
+    });
   };
 
-  if (!chats.length) {
+  if (!chats.length)
     return (
       <>
         <AppHeader backButton={<BackButton />} />
-        <EmptyView title='There is no chats.' />
+        <EmptyView title="There is no chats." />
       </>
     );
-  }
 
   return (
     <>
       <AppHeader backButton={<BackButton />} />
-      <FlatList 
+      <FlatList
         data={chats}
         contentContainerStyle={styles.container}
-        renderItem={({item}) => (
+        renderItem={({ item }) => (
           <Pressable onPress={() => onChatPress(item)}>
-            <RecentChat 
-              name={item.peerProfile.name} 
-              avatar={item.peerProfile.avatar} 
+            <RecentChat
+              name={item.peerProfile.name}
+              avatar={item.peerProfile.avatar}
               timestamp={item.timestamp}
               lastMessage={item.lastMessage}
               unreadMessageCount={item.unreadChatCounts}
@@ -58,12 +65,12 @@ const Chats = () => {
       />
     </>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     padding: size.padding,
-  }
+  },
 });
 
-export default Chats
+export default Chats;

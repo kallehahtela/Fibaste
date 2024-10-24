@@ -24,8 +24,8 @@ const asyncStorage = {
 };
 
 export enum Keys {
-    AUTH_TOKEN = 'AUTH_TOKEN',
-    REFRESH_TOKEN = 'REFRESH_TOKEN',
-};
+    AUTH_TOKEN = "AUTH_TOKEN",
+    REFRESH_TOKEN = "REFRESH_TOKEN",
+}
 
 export default asyncStorage;
