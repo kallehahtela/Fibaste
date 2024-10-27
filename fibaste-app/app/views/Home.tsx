@@ -3,6 +3,7 @@ import LatestProductList, {
   LatestProduct,
 } from "@components/LatestProductList";
 import SearchBar from "@components/SearchBar";
+import SearchModal from "@components/SearchModal";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import ChatNotification from "@ui/ChatNotification";
 import size from "@utils/size";
@@ -67,6 +68,7 @@ interface Props {}
 
 const Home: FC<Props> = (props) => {
   const [products, setProducts] = useState<LatestProduct[]>([]);
+  const [showSearchModal, setShowSearchModal] = useState(false);
   const { navigate } = useNavigation<NavigationProp<AppStackParamList>>();
   const { authClient } = useClient();
   const { authState } = useAuth();
@@ -114,7 +116,7 @@ const Home: FC<Props> = (props) => {
         indicate={totalUnreadMessages > 0}
       />
       <ScrollView style={styles.container}>
-        <SearchBar />
+        <SearchBar asButton onPress={() => setShowSearchModal(true)} />
         <CategoryList
           onPress={(category) => navigate("ProductList", { category })}
         />
@@ -123,6 +125,8 @@ const Home: FC<Props> = (props) => {
           onPress={({ id }) => navigate("SingleProduct", { id })}
         />
       </ScrollView>
+
+      <SearchModal visible={showSearchModal} onClose={setShowSearchModal} />
     </>
   );
 };

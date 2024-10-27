@@ -391,17 +391,11 @@ export const getListings: RequestHandler = async (req, res) => {
 export const searchProducts: RequestHandler = async (req, res) => {
     const { name } = req.query;
 
-    const filter: FilterQuery<ProductDocument> = {};
+    const filter: FilterQuery<ProductDocument> = {}
 
-    if (typeof name === "string") filter.name = { $regex: new RegExp(name, "i") };
+    if (typeof name === 'string') filter.name = { $regex: new RegExp(name, 'i') }
 
     const products = await ProductModel.find(filter).limit(50);
 
-    res.json({
-        results: products.map((product) => ({
-            id: product._id,
-            name: product.name,
-            thumbnail: product.thumbnail,
-        })),
-    });
+    res.json({ results: products.map(product => ({ id: product._id, name: product.name })) });
 };

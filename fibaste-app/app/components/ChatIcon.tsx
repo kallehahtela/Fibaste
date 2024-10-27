@@ -19,7 +19,7 @@ const ChatIcon: FC<Props> = ({ onPress, busy }) => {
                         style={styles.flex1}
                         autoPlay
                         loop
-                        source={require('../../assets/LoadingSpinner.json')}
+                        source={require('../../assets/loading_2.json')}
                     />
                 </View>
             </View>
